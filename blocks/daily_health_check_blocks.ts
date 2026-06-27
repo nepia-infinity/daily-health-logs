@@ -111,12 +111,12 @@ function buildDailyHealthCheckBlocks() {
       ],
     },
     {
-      title: "服薬を忘れていませんか？",
+      title: "服薬は忘れていませんか？",
       blockId: "block_medication",
       actionId: "action_medication",
       options: [
-        { text: "はい", value: "meds_forgot" },
-        { text: "いいえ", value: "meds_taken" },
+        { text: "問題ありません", value: "meds_taken" },
+        { text: "忘れていたかも", value: "meds_not_taken" },
       ],
     },
     {

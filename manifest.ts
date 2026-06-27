@@ -1,7 +1,8 @@
 import { Manifest } from "deno-slack-sdk/mod.ts";
 import TestHealthCheckWorkflow from "./workflows/test_workflow.ts";
 import { SendTestHealthCheckBlocksFunction } from "./functions/send_test_health_check_blocks.ts";
-import SlackUserProfiles from "./datastores/slack_users_profiles.ts";
+import SlackUserProfilesDatastore from "./datastores/slack_user_profiles.ts";
+import DailyHealthLogsDatastore from "./datastores/daily_health_logs.ts";
 
 export default Manifest({
   name: "daily-health-logs",
@@ -14,7 +15,8 @@ export default Manifest({
     SendTestHealthCheckBlocksFunction,
   ],
   datastores: [
-    SlackUserProfiles,
+    SlackUserProfilesDatastore,
+    DailyHealthLogsDatastore,
   ],
   outgoingDomains: [],
   botScopes: [

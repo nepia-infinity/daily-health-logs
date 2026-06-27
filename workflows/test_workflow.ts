@@ -1,5 +1,6 @@
 import { DefineWorkflow, Schema } from "deno-slack-sdk/mod.ts";
 import { SendTestHealthCheckBlocksFunction } from "../functions/send_test_health_check_blocks.ts";
+import { SaveRawDataFunction } from "../functions/save_raw_data.ts";
 
 /**
  * 体調チェックBlock KitをSlack AppからDMでテスト送信するWorkflow
@@ -23,8 +24,23 @@ const TestHealthCheckWorkflow = DefineWorkflow({
   },
 });
 
-TestHealthCheckWorkflow.addStep(SendTestHealthCheckBlocksFunction, {
-  user_id: TestHealthCheckWorkflow.inputs.user_id,
+const healthCheckStep = TestHealthCheckWorkflow.addStep(
+  SendTestHealthCheckBlocksFunction,
+  {
+    user_id: TestHealthCheckWorkflow.inputs.user_id,
+  },
+);
+
+TestHealthCheckWorkflow.addStep(SaveRawDataFunction, {
+  user_id: healthCheckStep.outputs.user_id,
+  channel_id: healthCheckStep.outputs.channel_id,
+  message_ts: healthCheckStep.outputs.message_ts,
+  meal: healthCheckStep.outputs.meal,
+  sleep: healthCheckStep.outputs.sleep,
+  condition: healthCheckStep.outputs.condition,
+  work_style: healthCheckStep.outputs.work_style,
+  medication: healthCheckStep.outputs.medication,
+  depression: healthCheckStep.outputs.depression,
 });
 
 export default TestHealthCheckWorkflow;
