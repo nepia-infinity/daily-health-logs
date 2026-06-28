@@ -1,4 +1,6 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
+import { DateUtils } from "../utils/date_utils.ts";
+import { fetchUserTimeZone } from "../utils/call_slack_user_info.ts";
 
 const DAILY_HEALTH_LOGS_DATASTORE = "daily_health_logs";
 
@@ -86,9 +88,17 @@ export default SlackFunction(
   async ({ inputs, client }) => {
     const now = new Date();
 
-    const recordDate = formatDateJst(now);
-    const weekStartDate = getWeekStartDateJst(now);
-    const dayOfWeek = getDayOfWeekJst(now);
+    // 回答したユーザーのtimezoneを取得する
+    const userTz = await fetchUserTimeZone(client, inputs.user_id);
+    const dateUtils = new DateUtils(userTz);
+
+    // timezoneを反映した日時に変換する
+    const recordDate = dateUtils.formatDate(now);
+    const weekStartDate = dateUtils.getWeekStartDate(now);
+    const dayOfWeek = dateUtils.getDayOfWeek(now);
+
+    // datastore検索用のUUIDを生成する （例）U0BC46H2U3C#2026-06-28
+    // command-example: slack datastore get --datastore daily_health_logs '{"id": "U0BC46H2U3C#2026-06-28"}'
     const recordId = `${inputs.user_id}#${recordDate}`;
 
     const result = await client.apps.datastore.put({
@@ -139,52 +149,4 @@ function toScore(actionId: string, value: string): number {
   }
 
   return scoreValues[index] ?? 0;
-}
-
-/** DateをAsia/Tokyo基準のYYYY-MM-DD文字列に変換する。 */
-function formatDateJst(date: Date): string {
-  return new Intl.DateTimeFormat("sv-SE", {
-    timeZone: "Asia/Tokyo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
-}
-
-/** DateをAsia/Tokyo基準の曜日短縮表記に変換する。例: Mon, Tue, Wed */
-function getDayOfWeekJst(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Tokyo",
-    weekday: "short",
-  }).format(date);
-}
-
-/**
- * 指定日の週の月曜日をYYYY-MM-DDで返す。
- */
-function getWeekStartDateJst(date: Date): string {
-  const recordDate = formatDateJst(date);
-  const weekStart = parseDateStringAsUtc(recordDate);
-  const day = weekStart.getUTCDay();
-  const diffToMonday = day === 0 ? -6 : 1 - day;
-
-  weekStart.setUTCDate(weekStart.getUTCDate() + diffToMonday);
-
-  return formatDateUtc(weekStart);
-}
-
-/** YYYY-MM-DD文字列をUTC基準のDateに変換する。 */
-function parseDateStringAsUtc(dateString: string): Date {
-  const [year, month, day] = dateString.split("-").map(Number);
-
-  return new Date(Date.UTC(year, month - 1, day));
-}
-
-/** UTC DateをYYYY-MM-DD文字列に変換する。 */
-function formatDateUtc(date: Date): string {
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
 }

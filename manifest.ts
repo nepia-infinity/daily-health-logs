@@ -25,5 +25,6 @@ export default Manifest({
     "im:write",
     "datastore:read",
     "datastore:write",
+    "users:read",
   ],
 });
