@@ -157,4 +157,5 @@ Slackでの自動化開発についてさらに学ぶには、以下のリソー
 -   [Automation Overview](https://api.slack.com/automation)
 -   [CLI Quick Reference](https://api.slack.com/automation/cli/quick-reference)
 -   [Samples and Templates](https://api.slack.com/automation/samples)
--   [Block Kit Builder](https://app.slack.com/block-kit-builder/)
+-   [Block Kit Builder](https://app.slack.com/block-kit-builder/): ブラウザ上でUIをインタラクティブに構築できる公式ツールです。
+-   [deno-slack-sdk/issues/276](https://github.com/slackapi/deno-slack-sdk/issues/276): `datastore.get`で発生する型エラーの解決に役立ったIssue。
