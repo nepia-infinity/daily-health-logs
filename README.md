@@ -28,6 +28,7 @@ DenoとSlack CLIを使用して構築されています。
 個人の健康に関する情報を取り扱うため、やり取りはすべてユーザー個人のDM内で行われ、他のユーザーに情報が見えることはありません。
 
 ## 主な機能
+<img width="1524" height="996" alt="image" src="https://github.com/user-attachments/assets/689c5bce-2e4a-4037-8f41-d7e6fed39f80" />
 
 -   **体調チェックの開始**: Slackのショートカットメニューから簡単に体調チェックを開始できます。
 -   **インタラクティブなUI**: [Block Kit](https://api.slack.com/block-kit)を利用したモダンなUIで、直感的に回答できます。最近ではTable（表形式）やData Visualization（データ可視化）といった新しいコンポーネントも利用可能になり、より表現力豊かなUIを構築できます。
