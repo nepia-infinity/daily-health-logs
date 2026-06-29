@@ -57,8 +57,27 @@ export function buildSubmissionCompletionBlocks(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `:warning: お薬の飲み忘れはありませんか？\n:bulb: Slackのリマインダー機能を活用しましょう！\n\`\`\`/remind me "服薬を忘れずに" every weekday at 12:00\`\`\``,
+        text: [
+          ":warning: お薬の飲み忘れはありませんか？",
+          ":bulb: Slackのリマインダー機能を活用しましょう！",
+        ].join("\n"),
       },
+    });
+
+    blocks.push({
+      type: "rich_text",
+      elements: [
+        {
+          type: "rich_text_preformatted",
+          language: "plain-text",
+          elements: [
+            {
+              type: "text",
+              text: '/remind me "服薬を忘れずに" every weekday at 12:00',
+            },
+          ],
+        },
+      ],
     });
   }
 
