@@ -103,6 +103,16 @@ $ slack trigger create --trigger-def triggers/test_trigger.ts
 -   `daily_health_logs`: 日々の健康状態の回答を保存します。
 -   `slack_user_profiles`: ユーザーのSlackプロファイル情報（現在は未使用）を保存するためのものです。
 
+### CLIからのデータ参照
+
+Slack CLIを使用すると、データストアに保存された値を直接確認できます。
+主キー（このアプリでは `record_id`）を指定して、以下のようにコマンドを実行します。`record_id` は `ユーザーID#日付` の形式です。
+
+```zsh
+# record_id を指定してdaily_health_logsデータストアから値を取得
+$ slack datastore get --datastore daily_health_logs --key 'U0123ABCDEF#2026-06-29'
+```
+
 ## デプロイ
 
 開発が完了したら、`slack deploy`コマンドを使用してアプリをSlackインフラストラクチャにデプロイします。
