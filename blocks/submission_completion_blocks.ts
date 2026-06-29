@@ -54,16 +54,24 @@ export function buildSubmissionCompletionBlocks(
   // 服薬のアラートメッセージ
   if (forgotMeds) {
     blocks.push({
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": ":pill: お薬の飲み忘れはありませんか？",
+				"emoji": true
+			},
+			"level": 2
+		})
+
+    blocks.push({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: [
-          ":warning: お薬の飲み忘れはありませんか？",
-          ":bulb: Slackのリマインダー機能を活用しましょう！",
-        ].join("\n"),
+        text: ":bulb: Tips: Slackのリマインダー機能を活用しましょう :slack:",
       },
     });
 
+    // コピーできるコマンド部分
     blocks.push({
       type: "rich_text",
       elements: [
