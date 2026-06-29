@@ -1,198 +1,160 @@
-# Deno Starter Template
+# Daily Health Logs
 
-This is a scaffolded Deno template used to build out Slack apps using the Slack
-CLI.
+これは、Slack上で日々の健康状態を記録するためのSlackアプリです。
+DenoとSlack CLIを使用して構築されています。
 
 **Guide Outline**:
 
-- [Setup](#setup)
-  - [Install the Slack CLI](#install-the-slack-cli)
-  - [Clone the Template](#clone-the-template)
-- [Running Your Project Locally](#running-your-project-locally)
-- [Creating Triggers](#creating-triggers)
-- [Datastores](#datastores)
-- [Testing](#testing)
-- [Deploying Your App](#deploying-your-app)
-- [Viewing Activity Logs](#viewing-activity-logs)
-- [Project Structure](#project-structure)
-- [Resources](#resources)
+- [概要](#概要)
+- [主な機能](#主な機能)
+- [今後の展望](#今後の展望)
+- [セットアップ](#セットアップ)
+  - [Slack CLIのインストール](#slack-cliのインストール)
+  - [リポジトリのクローン](#リポジトリのクローン)
+- [ローカルでの実行](#ローカルでの実行)
+- [トリガーの作成](#トリガーの作成)
+- [データストア](#データストア)
+- [デプロイ](#デプロイ)
+- [アクティビティログの表示](#アクティビティログの表示)
+- [プロジェクトの構造](#プロジェクトの構造)
+- [リソース](#リソース)
 
 ---
 
-## Setup
+## 概要
 
-Before getting started, first make sure you have a development workspace where
-you have permission to install apps. **Please note that the features in this
-project require that the workspace be part of
-[a Slack paid plan](https://slack.com/pricing).**
+このアプリは、Slackのショートカットからワークフローを起動し、ユーザーにDMで体調に関する質問を送信します。ユーザーがBlock Kitで構成されたフォームに回答すると、その内容はSlackがホストするデータストアに安全に保存されます。
 
-### Install the Slack CLI
+個人の健康に関する情報を取り扱うため、やり取りはすべてユーザー個人のDM内で行われ、他のユーザーに情報が見えることはありません。
 
-To use this template, you need to install and configure the Slack CLI.
-Step-by-step instructions can be found in our
-[Quickstart Guide](https://api.slack.com/automation/quickstart).
+## 主な機能
 
-### Clone the Template
+-   **体調チェックの開始**: Slackのショートカットメニューから簡単に体調チェックを開始できます。
+-   **インタラクティブなUI**: [Block Kit](https://api.slack.com/block-kit)を利用したモダンなUIで、直感的に回答できます。最近ではTable（表形式）やData Visualization（データ可視化）といった新しいコンポーネントも利用可能になり、より表現力豊かなUIを構築できます。
+-   **データ保存**: 回答内容はSlackのDatastoreに保存され、後から参照することが可能です。
 
-Start by cloning this repository:
+## 今後の展望
+
+現在はSlackのデータストアに情報を保存していますが、将来的にはGoogle Sheets APIなど外部サービスとの連携も視野に入れています。これにより、記録された健康データをより柔軟に分析・活用できるような構成を目指しています。
+
+## セットアップ
+
+このプロジェクト開発には Deno と Git が必要です。それぞれの公式サイトを参考に、事前にインストールを済ませてください。
+
+-   [Deno公式サイト](https://deno.land/)
+-   [Git公式サイト](https://git-scm.com/)
+
+セットアップを開始する前に、アプリをインストールする権限のある開発ワークスペースがあることを確認してください。**このプロジェクトの機能を使用するには、ワークスペースが[Slackの有料プラン](https://slack.com/pricing)の一部である必要があることに注意してください。**
+
+### Slack CLIのインストール
+
+このテンプレートを使用するには、Slack CLIをインストールして設定する必要があります。詳細な手順については、[クイックスタートガイド](https://api.slack.com/automation/quickstart)を参照してください。
+
+### リポジトリのクローン
+
+まず、このリポジトリをクローンします。
 
 ```zsh
-# Clone this project onto your machine
-$ slack create my-app -t slack-samples/deno-starter-template
+# このプロジェクトをマシンにクローンします
+$ git clone https://github.com/your-username/daily-health-logs.git
 
-# Change into the project directory
-$ cd my-app
+# プロジェクトディレクトリに移動します
+$ cd daily-health-logs
 ```
 
-## Running Your Project Locally
+## ローカルでの実行
 
-While building your app, you can see your changes appear in your workspace in
-real-time with `slack run`. You'll know an app is the development version if the
-name has the string `(local)` appended.
+アプリを開発中、`slack run`コマンドを使用すると、変更をリアルタイムでワークスペースに反映させることができます。開発版のアプリ名は`(local)`という接尾辞がつきます。
 
 ```zsh
-# Run app locally
+# アプリをローカルで実行します
 $ slack run
 
 Connected, awaiting events
 ```
 
-To stop running locally, press `<CTRL> + C` to end the process.
+ローカルでの実行を停止するには、`<CTRL> + C`を押してプロセスを終了します。
 
-## Creating Triggers
+> **Note for Windows Users:**
+> Windows環境では、環境変数のPATHの優先順位によっては、`slack run`のようなコマンドを実行しようとすると、Slackのデスクトップアプリ(`slack.exe`)が起動してしまう場合があります。
+> その場合は、ターミナルで`slack.exe`へのパスよりもSlack CLIへのパスの優先順位が高くなるように設定を調整するか、コマンドをフルパスで指定するなどの対応をご検討ください。
 
-[Triggers](https://api.slack.com/automation/triggers) are what cause workflows
-to run. These triggers can be invoked by a user, or automatically as a response
-to an event within Slack.
+## トリガーの作成
 
-When you `run` or `deploy` your project for the first time, the CLI will prompt
-you to create a trigger if one is found in the `triggers/` directory. For any
-subsequent triggers added to the application, each must be
-[manually added using the `trigger create` command](#manual-trigger-creation).
+[トリガー](https://api.slack.com/automation/triggers)は、ワークフローを実行するきっかけとなるものです。このアプリでは、ショートカットからワークフローを起動するリンクトリガーを使用します。
 
-When creating triggers, you must select the workspace and environment that you'd
-like to create the trigger in. Each workspace can have a local development
-version (denoted by `(local)`), as well as a deployed version. _Triggers created
-in a local environment will only be available to use when running the
-application locally._
+プロジェクトを初めて`run`または`deploy`するとき、`triggers/`ディレクトリにトリガー定義が見つかると、CLIがトリガーの作成を促します。
 
-### Link Triggers
-
-A [link trigger](https://api.slack.com/automation/triggers/link) is a type of
-trigger that generates a **Shortcut URL** which, when posted in a channel or
-added as a bookmark, becomes a link. When clicked, the link trigger will run the
-associated workflow.
-
-Link triggers are _unique to each installed version of your app_. This means
-that Shortcut URLs will be different across each workspace, as well as between
-[locally run](#running-your-project-locally) and
-[deployed apps](#deploying-your-app).
-
-With link triggers, after selecting a workspace and environment, the output
-provided will include a Shortcut URL. Copy and paste this URL into a channel as
-a message, or add it as a bookmark in a channel of the workspace you selected.
-Interacting with this link will run the associated workflow.
-
-**Note: triggers won't run the workflow unless the app is either running locally
-or deployed!**
-
-### Manual Trigger Creation
-
-To manually create a trigger, use the following command:
+トリガーを手動で作成するには、次のコマンドを使用します。
 
 ```zsh
-$ slack trigger create --trigger-def triggers/sample_trigger.ts
+$ slack trigger create --trigger-def triggers/test_trigger.ts
 ```
 
-## Datastores
+コマンドを実行すると、トリガーを作成するワークスペースと環境を選択するよう求められます。ローカル環境で作成されたトリガーは、アプリをローカルで実行している場合にのみ使用できます。作成後、ショートカットURLが発行されるので、それをクリックすることでワークフローが実行されます。
 
-For storing data related to your app, datastores offer secure storage on Slack
-infrastructure. For an example of a datastore, see
-`datastores/sample_datastore.ts`. The use of a datastore requires the
-`datastore:write`/`datastore:read` scopes to be present in your manifest.
+**注意: アプリがローカルで実行されているか、デプロイされていない限り、トリガーはワークフローを実行しません！**
 
-## Testing
+## データストア
 
-For an example of how to test a function, see
-`functions/sample_function_test.ts`. Test filenames should be suffixed with
-`_test`.
+このアプリでは、以下の2つのデータストアを使用して情報を保存します。データストアを利用するには、マニフェストファイルに`datastore:write`および`datastore:read`スコープが必要です。
 
-Run all tests with `deno test`:
+-   `daily_health_logs`: 日々の健康状態の回答を保存します。
+-   `slack_user_profiles`: ユーザーのSlackプロファイル情報（現在は未使用）を保存するためのものです。
 
-```zsh
-$ deno test
-```
+## デプロイ
 
-## Deploying Your App
-
-Once development is complete, deploy the app to Slack infrastructure using
-`slack deploy`:
+開発が完了したら、`slack deploy`コマンドを使用してアプリをSlackインフラストラクチャにデプロイします。
 
 ```zsh
 $ slack deploy
 ```
 
-When deploying for the first time, you'll be prompted to
-[create a new link trigger](#creating-triggers) for the deployed version of your
-app. When that trigger is invoked, the workflow should run just as it did when
-developing locally (but without requiring your server to be running).
+## アクティビティログの表示
 
-## Viewing Activity Logs
-
-Activity logs of your application can be viewed live and as they occur with the
-following command:
+アプリケーションのアクティビティログは、次のコマンドでリアルタイムに表示できます。
 
 ```zsh
 $ slack activity --tail
 ```
 
-## Project Structure
-
-### `.slack/`
-
-Contains `apps.dev.json` and `apps.json`, which include installation details for
-development and deployed apps.
-
-Contains `hooks.json` used by the CLI to interact with the project's SDK
-dependencies. It contains script hooks that are executed by the CLI and
-implemented by the SDK.
-
-### `datastores/`
-
-[Datastores](https://api.slack.com/automation/datastores) securely store data
-for your application on Slack infrastructure. Required scopes to use datastores
-include `datastore:write` and `datastore:read`.
-
-### `functions/`
-
-[Functions](https://api.slack.com/automation/functions) are reusable building
-blocks of automation that accept inputs, perform calculations, and provide
-outputs. Functions can be used independently or as steps in workflows.
-
-### `triggers/`
-
-[Triggers](https://api.slack.com/automation/triggers) determine when workflows
-are run. A trigger file describes the scenario in which a workflow should be
-run, such as a user pressing a button or when a specific event occurs.
-
-### `workflows/`
-
-A [workflow](https://api.slack.com/automation/workflows) is a set of steps
-(functions) that are executed in order.
-
-Workflows can be configured to run without user input or they can collect input
-by beginning with a [form](https://api.slack.com/automation/forms) before
-continuing to the next step.
+## プロジェクトの構造
 
 ### `manifest.ts`
 
-The [app manifest](https://api.slack.com/automation/manifest) contains the app's
-configuration. This file defines attributes like app name and description.
+[アプリマニフェスト](https://api.slack.com/automation/manifest)には、アプリ名、説明、実行するワークフロー、関数、データストア、必要な権限（スコープ）など、アプリの全体的な設定が含まれています。
 
-## Resources
+### `datastores/`
 
-To learn more about developing automations on Slack, visit the following:
+[データストア](https://api.slack.com/automation/datastores)は、Slackインフラストラクチャ上でアプリケーションのデータを安全に保存します。
+- `daily_health_logs.ts`: 日々の健康チェックの回答を格納するデータストアの定義です。
+- `slack_user_profiles.ts`: Slackユーザーのプロファイル情報を格納するデータストアの定義です。
 
-- [Automation Overview](https://api.slack.com/automation)
-- [CLI Quick Reference](https://api.slack.com/automation/cli/quick-reference)
-- [Samples and Templates](https://api.slack.com/automation/samples)
+### `functions/`
+
+[関数](https://api.slack.com/automation/functions)は、ワークフローのステップとして実行される個別の処理単位です。
+- `send_test_health_check_blocks.ts`: ユーザーに体調チェックの質問をDMで送信する関数です。
+- `save_raw_data.ts`: ユーザーからの回答を`daily_health_logs`データストアに保存する関数です。
+
+### `triggers/`
+
+[トリガー](https://api.slack.com/automation/triggers)は、ワークフローをいつ実行するかを定義します。
+- `test_trigger.ts`: ユーザーがショートカットをクリックしたときに`TestHealthCheckWorkflow`を開始するためのトリガー定義です。
+
+### `workflows/`
+
+[ワークフロー](https://api.slack.com/automation/workflows)は、一連のステップ（関数）を順序通りに実行する処理の流れです。
+- `test_workflow.ts`: 体調チェックの質問を送信し、回答を保存するという一連の流れを定義したワークフローです。
+
+### `.slack/`
+
+開発用およびデプロイ済みアプリのインストール詳細を含む`apps.dev.json`と`apps.json`が含まれています。
+
+## リソース
+
+Slackでの自動化開発についてさらに学ぶには、以下のリソースをご覧ください。
+
+-   [Automation Overview](https://api.slack.com/automation)
+-   [CLI Quick Reference](https://api.slack.com/automation/cli/quick-reference)
+-   [Samples and Templates](https://api.slack.com/automation/samples)
+-   [Block Kit Builder](https://app.slack.com/block-kit-builder/)
