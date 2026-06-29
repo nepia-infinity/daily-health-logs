@@ -1,6 +1,4 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
-import { DateUtils } from "../utils/date_utils.ts";
-import { fetchUserTimeZone } from "../utils/call_slack_user_info.ts";
 
 const DAILY_HEALTH_LOGS_DATASTORE = "daily_health_logs";
 
@@ -68,6 +66,22 @@ export const SaveRawDataFunction = DefineFunction({
         type: Schema.types.string,
         description: "気分の落ち込みの回答",
       },
+      record_date: {
+        type: Schema.types.string,
+        description: "記録日",
+      },
+      week_start_date: {
+        type: Schema.types.string,
+        description: "週開始日",
+      },
+      day_of_week: {
+        type: Schema.types.string,
+        description: "曜日",
+      },
+      created_at: {
+        type: Schema.types.string,
+        description: "作成日時",
+      },
     },
     required: [
       "user_id",
@@ -79,6 +93,10 @@ export const SaveRawDataFunction = DefineFunction({
       "work_style",
       "medication",
       "depression",
+      "record_date",
+      "week_start_date",
+      "day_of_week",
+      "created_at",
     ],
   },
 });
@@ -86,30 +104,18 @@ export const SaveRawDataFunction = DefineFunction({
 export default SlackFunction(
   SaveRawDataFunction,
   async ({ inputs, client }) => {
-    const now = new Date();
-
-    // 回答したユーザーのtimezoneを取得する
-    const userTz = await fetchUserTimeZone(client, inputs.user_id);
-    const dateUtils = new DateUtils(userTz);
-
-    // timezoneを反映した日時に変換する
-    const recordDate = dateUtils.formatDate(now);
-    const weekStartDate = dateUtils.getWeekStartDate(now);
-    const dayOfWeek = dateUtils.getDayOfWeek(now);
-
     // datastore検索用のUUIDを生成する （例）U0BC46H2U3C#2026-06-28
-    // command-example: slack datastore get --datastore daily_health_logs '{"id": "U0BC46H2U3C#2026-06-28"}'
-    const recordId = `${inputs.user_id}#${recordDate}`;
-
+    // （例）slack datastore get --datastore daily_health_logs '{"id": "U0BC46H2U3C#2026-06-28"}'
+    const recordId = `${inputs.user_id}#${inputs.record_date}`;
     const result = await client.apps.datastore.put({
       datastore: DAILY_HEALTH_LOGS_DATASTORE,
       item: {
         record_id: recordId,
         user_id: inputs.user_id,
-        record_date: recordDate,
-        week_start_date: weekStartDate,
-        day_of_week: dayOfWeek,
-        created_at: now.toISOString(),
+        record_date: inputs.record_date,
+        week_start_date: inputs.week_start_date,
+        day_of_week: inputs.day_of_week,
+        created_at: inputs.created_at,
         meal: inputs.meal,
         sleep: inputs.sleep,
         sleep_score: toScore("action_sleep", inputs.sleep),

@@ -41,6 +41,10 @@ TestHealthCheckWorkflow.addStep(SaveRawDataFunction, {
   work_style: healthCheckStep.outputs.work_style,
   medication: healthCheckStep.outputs.medication,
   depression: healthCheckStep.outputs.depression,
+  record_date: healthCheckStep.outputs.record_date,
+  week_start_date: healthCheckStep.outputs.week_start_date,
+  day_of_week: healthCheckStep.outputs.day_of_week,
+  created_at: healthCheckStep.outputs.created_at,
 });
 
 export default TestHealthCheckWorkflow;

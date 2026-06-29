@@ -1,6 +1,8 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
 import { healthCheckBlocks } from "../blocks/daily_health_check_blocks.ts";
 import { buildSubmissionCompletionBlocks } from "../blocks/submission_completion_blocks.ts";
+import { DateUtils } from "../utils/date_utils.ts";
+import { fetchUserTimeZone } from "../utils/call_slack_user_info.ts";
 
 type SelectedOptionAction = {
   selected_option?: {
@@ -83,6 +85,22 @@ export const SendTestHealthCheckBlocksFunction = DefineFunction({
         type: Schema.types.string,
         description: "気分の落ち込みの回答",
       },
+      record_date: {
+        type: Schema.types.string,
+        description: "記録日",
+      },
+      week_start_date: {
+        type: Schema.types.string,
+        description: "週開始日",
+      },
+      day_of_week: {
+        type: Schema.types.string,
+        description: "曜日",
+      },
+      created_at: {
+        type: Schema.types.string,
+        description: "作成日時",
+      },
     },
     required: [
       "user_id",
@@ -94,6 +112,10 @@ export const SendTestHealthCheckBlocksFunction = DefineFunction({
       "work_style",
       "medication",
       "depression",
+      "record_date",
+      "week_start_date",
+      "day_of_week",
+      "created_at",
     ],
   },
 });
@@ -132,6 +154,9 @@ export default SlackFunction(
     console.log("Block Kit action received:");
     console.log(JSON.stringify(action, null, 2));
 
+    console.log("=== Body Data ===");
+    console.log(JSON.stringify(body, null, 2));
+
     const channelId = body.channel?.id;
     const messageTs = body.message?.ts;
 
@@ -151,7 +176,7 @@ export default SlackFunction(
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "体調チェックをキャンセルしました。",
+              text: ":warning: 体調チェックをキャンセルしました。",
             },
           },
         ],
@@ -163,12 +188,9 @@ export default SlackFunction(
         };
       }
 
-      await client.functions.completeSuccess({
-        function_execution_id: body.function_data.execution_id,
-        outputs: {},
-      });
-
-      return;
+      return {
+        completed: false,
+      };
     }
 
     if (action.action_id === "submit_survey") {
@@ -181,8 +203,26 @@ export default SlackFunction(
       const medication = getSelectedValue(values, "action_medication");
       const depression = getSelectedValue(values, "action_depression");
 
+      // ユーザーのtimezoneを取得する
+      const userTz = await fetchUserTimeZone(client, body.user.id);
+      const dateUtils = new DateUtils(userTz);
+      const now = new Date();
+
+      const dayOfWeek = dateUtils.getDayOfWeek(now);
+      const recordDate = dateUtils.formatDate(now);
+      const weekStartDate = dateUtils.getWeekStartDate(now);
+      const createdAt = now.toISOString();
+
       // ボタン押下時のBlocksを呼び出す
-      const submissionCompletionBlocks = buildSubmissionCompletionBlocks();
+      const submissionCompletionBlocks = buildSubmissionCompletionBlocks(
+        {
+          depression: depression,
+          dayOfWeek: dayOfWeek,
+          medication: medication,
+          dateUtils,
+          now,
+        },
+      );
 
       // ボタン押下時にアンケート内容を書き替える
       const updateResponse = await client.chat.update({
@@ -199,6 +239,7 @@ export default SlackFunction(
       }
 
       // 次のステップへ渡す値をここで定義
+      // 引数を変更する際は、save_raw-data.ts, workflows/test_workflows.tsの修正が必要
       await client.functions.completeSuccess({
         function_execution_id: body.function_data.execution_id,
         outputs: {
@@ -211,6 +252,10 @@ export default SlackFunction(
           work_style: workStyle,
           medication,
           depression,
+          record_date: recordDate,
+          week_start_date: weekStartDate,
+          day_of_week: dayOfWeek,
+          created_at: createdAt,
         },
       });
 
