@@ -2,7 +2,7 @@ import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
 import { healthCheckBlocks } from "../blocks/daily_health_check_blocks.ts";
 import { buildSubmissionCompletionBlocks } from "../blocks/submission_completion_blocks.ts";
 import { DateUtils } from "../utils/date_utils.ts";
-import { fetchUserTimeZone } from "../utils/call_slack_user_info.ts";
+import { fetchUserTimeZone } from "../utils/fetch_slack_user_info.ts";
 
 type SelectedOptionAction = {
   selected_option?: {
@@ -34,10 +34,10 @@ function getSelectedValue(
  * 指定したSlackユーザーにDMで送信します。
  */
 export const SendTestHealthCheckBlocksFunction = DefineFunction({
-  callback_id: "send_test_health_check_blocks",
+  callback_id: "test_send_health_check_blocks",
   title: "体調チェックBlock Kitをテスト送信",
   description: "生成済みのBlock KitをSlack AppからDMでテスト送信します",
-  source_file: "functions/send_test_health_check_blocks.ts",
+  source_file: "functions/test_send_health_check_blocks.ts",
   input_parameters: {
     properties: {
       user_id: {

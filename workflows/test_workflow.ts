@@ -1,5 +1,5 @@
 import { DefineWorkflow, Schema } from "deno-slack-sdk/mod.ts";
-import { SendTestHealthCheckBlocksFunction } from "../functions/send_test_health_check_blocks.ts";
+import { SendTestHealthCheckBlocksFunction } from "../functions/test_send_health_check_blocks.ts";
 import { SaveRawDataFunction } from "../functions/save_raw_data.ts";
 
 /**
