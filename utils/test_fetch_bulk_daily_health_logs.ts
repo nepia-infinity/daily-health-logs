@@ -1,4 +1,3 @@
-// scripts/test_bulk_get_daily_health_logs.ts
 import { SlackAPI } from "deno-slack-api/mod.ts";
 
 const token = Deno.env.get("SLACK_BOT_TOKEN");
@@ -8,7 +7,6 @@ if (!token) {
 }
 
 const client = SlackAPI(token);
-
 const ids = [
   "U0BC46H2U3C#2026-06-27",
   "U0BC46H2U3C#2026-06-28",
