@@ -144,7 +144,7 @@ $ slack activity --tail
 ### `functions/`
 
 [関数](https://api.slack.com/automation/functions)は、ワークフローのステップとして実行される個別の処理単位です。
-- `send_test_health_check_blocks.ts`: ユーザーに体調チェックの質問をDMで送信する関数です。
+- `test_send_health_check_blocks.ts`: ユーザーに体調チェックの質問をDMで送信する関数です。
 - `save_raw_data.ts`: ユーザーからの回答を`daily_health_logs`データストアに保存する関数です。
 
 ### `triggers/`
@@ -168,5 +168,5 @@ Slackでの自動化開発についてさらに学ぶには、以下のリソー
 -   [Automation Overview](https://api.slack.com/automation)
 -   [CLI Quick Reference](https://api.slack.com/automation/cli/quick-reference)
 -   [Samples and Templates](https://api.slack.com/automation/samples)
--   [Block Kit Builder](https://app.slack.com/block-kit-builder/): ブラウザ上でUIをインタラクティブに構築できる公式ツールです。
--   [deno-slack-sdk/issues/276](https://github.com/slackapi/deno-slack-sdk/issues/276): `datastore.get`で発生する型エラーの解決に役立ったIssue。
+-   [Block Kit Builder](https://app.slack.com/block-kit-builder/)
+-   [deno-slack-sdk/issues/276](https://github.com/slackapi/deno-slack-sdk/issues/276): ワークフローをキャンセルした際に、エラー通知が来てしまうのを防ぐために役立ったissue
