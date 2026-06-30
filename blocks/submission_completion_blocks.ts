@@ -1,4 +1,6 @@
+import type { SlackAPIClient } from "deno-slack-sdk/types.ts";
 import { DateUtils } from "../utils/date_utils.ts";
+import { fetchBulkDailyHealthLogs } from "../utils/test_fetch_bulk_daily_health_logs.ts";
 
 /**
  * 提出ブロックを生成するための引数の型定義
@@ -28,9 +30,10 @@ export type SlackBlock = {
 /**
  * 体調チェックの提出完了後に表示するBlock Kit
  */
-export function buildSubmissionCompletionBlocks(
+export async function buildSubmissionCompletionBlocks(
   params: CompletionBlockParams,
-): SlackBlock[] {
+  client: SlackAPIClient,
+): Promise<SlackBlock[]> {
   const isFriday = params.dayOfWeek === "Fri";
   const isDepressed = params.depression === "depression_yes";
   const forgotMeds = params.medication === "meds_not_taken";
@@ -93,6 +96,10 @@ export function buildSubmissionCompletionBlocks(
   if (isFriday || isDepressed) {
     const weekStartDate = params.dateUtils.getWeekStartDate(params.now); // 例: "2026-06-22"
     const weekEndDate = params.dateUtils.formatDate(params.now);
+
+    const dailyHealthLogs = await fetchBulkDailyHealthLogs(client);
+    console.log("=== Fetched Daily Health Logs ===");
+    console.log(JSON.stringify(dailyHealthLogs, null, 2));
 
     // 2026-06-22 〜 2026-06-28のように表示する
     // isDepressedがtrueの場合、必ずしも金曜とは限らないため、weekEndDateは今日の日付とする

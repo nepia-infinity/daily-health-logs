@@ -154,8 +154,8 @@ export default SlackFunction(
     console.log("Block Kit action received:");
     console.log(JSON.stringify(action, null, 2));
 
-    console.log("=== Body Data ===");
-    console.log(JSON.stringify(body, null, 2));
+    // console.log("=== Body Data ===");
+    // console.log(JSON.stringify(body, null, 2));
 
     const channelId = body.channel?.id;
     const messageTs = body.message?.ts;
@@ -214,7 +214,7 @@ export default SlackFunction(
       const createdAt = now.toISOString();
 
       // ボタン押下時のBlocksを呼び出す
-      const submissionCompletionBlocks = buildSubmissionCompletionBlocks(
+      const submissionCompletionBlocks = await buildSubmissionCompletionBlocks(
         {
           depression: depression,
           dayOfWeek: dayOfWeek,
@@ -222,6 +222,7 @@ export default SlackFunction(
           dateUtils,
           now,
         },
+        client,
       );
 
       // ボタン押下時にアンケート内容を書き替える
