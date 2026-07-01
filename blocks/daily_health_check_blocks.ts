@@ -124,11 +124,8 @@ function buildDailyHealthCheckBlocks() {
       blockId: "block_depression",
       actionId: "action_depression",
       options: [
-        {
-          text: "はい（※別途、担当からご連絡いたします）",
-          value: "depression_yes",
-        },
-        { text: "いいえ", value: "depression_no" },
+        { text: "問題ありません", value: "depression_no" },
+        { text: "落ち込みがあります", value: "depression_yes" },
       ],
     },
   ];
