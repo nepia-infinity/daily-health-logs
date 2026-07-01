@@ -43,6 +43,14 @@ export class DateUtils {
     return this.formatDateUtc(weekStart);
   }
 
+  /** YYYY-MM-DD文字列に指定日数を加算して、YYYY-MM-DDで返す。 */
+  addDays(dateString: string, days: number): string {
+    const date = this.parseDateStringAsUtc(dateString);
+    date.setUTCDate(date.getUTCDate() + days);
+
+    return this.formatDateUtc(date);
+  }
+
   /** YYYY-MM-DD文字列をUTC基準のDateに変換する。 */
   private parseDateStringAsUtc(dateString: string): Date {
     const [year, month, day] = dateString.split("-").map(Number);

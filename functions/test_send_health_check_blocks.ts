@@ -221,6 +221,7 @@ export default SlackFunction(
           medication: medication,
           dateUtils,
           now,
+          userId: body.user.id,
         },
         client,
       );

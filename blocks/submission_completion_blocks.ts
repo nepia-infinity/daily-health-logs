@@ -9,6 +9,7 @@ import { fetchBulkDailyHealthLogs } from "../utils/test_fetch_bulk_daily_health_
  * @property {string} medication - 服薬状況 (例: "meds_taken" | "meds_not_taken")
  * @property {DateUtils} dateUtils - 日付計算ユーティリティのインスタンス
  * @property {Date} now - 実行時の日時オブジェクト
+ * @property {string} userId - SlackユーザーID
  */
 export type CompletionBlockParams = {
   depression: string;
@@ -16,6 +17,7 @@ export type CompletionBlockParams = {
   medication: string;
   dateUtils: DateUtils;
   now: Date;
+  userId: string;
 };
 
 /**
@@ -96,10 +98,14 @@ export async function buildSubmissionCompletionBlocks(
   if (isFriday || isDepressed) {
     const weekStartDate = params.dateUtils.getWeekStartDate(params.now); // 例: "2026-06-22"
     const weekEndDate = params.dateUtils.formatDate(params.now);
+    
+    // datastoreから取得したデータ
+    const dailyHealthLogs = await fetchBulkDailyHealthLogs(client, params.userId, weekStartDate);
 
-    const dailyHealthLogs = await fetchBulkDailyHealthLogs(client);
-    console.log("=== Fetched Daily Health Logs ===");
-    console.log(JSON.stringify(dailyHealthLogs, null, 2));
+    // 週の開始日と一致するデータをフィルタリングし、record_dateでソートする
+    const sortedLogs = dailyHealthLogs
+    .filter((log) => log.week_start_date === weekStartDate)
+    .sort((a, b) => a.record_date.localeCompare(b.record_date));
 
     // 2026-06-22 〜 2026-06-28のように表示する
     // isDepressedがtrueの場合、必ずしも金曜とは限らないため、weekEndDateは今日の日付とする
