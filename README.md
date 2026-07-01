@@ -31,7 +31,10 @@ DenoとSlack CLIを使用して構築されています。
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/689c5bce-2e4a-4037-8f41-d7e6fed39f80" />
 
 -   **体調チェックの開始**: Slackのショートカットメニューから簡単に体調チェックを開始できます。
--   **インタラクティブなUI**: [Block Kit](https://api.slack.com/block-kit)を利用したモダンなUIで、直感的に回答できます。最近ではTable（表形式）やData Visualization（データ可視化）といった新しいコンポーネントも利用可能になり、より表現力豊かなUIを構築できます。
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/a167e8ec-10c9-45d7-9bb0-d2bddcd89401" />
+
+-   **最近ではTable（表形式）やData Visualization（データ可視化）といった新しいコンポーネントも利用可能になり、より表現力豊かなUIを構築できます。
 -   **データ保存**: 回答内容はSlackのDatastoreに保存され、後から参照することが可能です。
 
 ## 今後の展望
