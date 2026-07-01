@@ -263,4 +263,4 @@ Slackでの自動化開発についてさらに学ぶには、以下のリソー
 -   [CLI Quick Reference](https://api.slack.com/automation/cli/quick-reference)
 -   [Samples and Templates](https://api.slack.com/automation/samples)
 -   [Block Kit Builder](https://app.slack.com/block-kit-builder/)
--   [deno-slack-sdk/issues/276](https://github.com/slackapi/deno-slack-sdk/issues/276): ワークフローをキャンセルした際に、エラー通知が来てしまうのを防ぐために役立ったissue
+-   [deno-slack-sdk/issues/276](https://github.com/slackapi/deno-slack-sdk/issues/276)
