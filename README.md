@@ -118,6 +118,84 @@ $ slack datastore get --datastore daily_health_logs --key 'U0123ABCDEF#2026-06-2
 slack-cli datastore bulk-get '{"datastore":"daily_health_logs","ids":["U0BC46H2U3C#2026-06-27","U0BC46H2U3C#2026-06-28"]}' --output json
 ```
 
+JSONのログ
+```json
+[
+  {
+    "week_start_date": "2026-06-22",
+    "created_at": "2026-06-27T06:51:36.486Z",
+    "meal": "meal_yes",
+    "depression": "depression_no",
+    "message_ts": "1782543071.342989",
+    "condition": "condition_excellent",
+    "sleep": "sleep_good",
+    "record_date": "2026-06-27",
+    "record_id": "U0BC46H2U3C#2026-06-27",
+    "day_of_week": "Sat",
+    "sleep_score": 1,
+    "condition_score": 1,
+    "user_id": "U0BC46H2U3C",
+    "channel_id": "*****",
+    "work_style": "work_remote",
+    "medication": "meds_forgot"
+  },
+  {
+    "week_start_date": "2026-06-29",
+    "created_at": "2026-06-30T04:42:46.352Z",
+    "meal": "meal_yes",
+    "depression": "depression_yes",
+    "message_ts": "1782794482.717439",
+    "condition": "condition_excellent",
+    "sleep": "sleep_slight",
+    "record_date": "2026-06-30",
+    "record_id": "U0BC46H2U3C#2026-06-30",
+    "day_of_week": "Tue",
+    "sleep_score": 0.75,
+    "condition_score": 1,
+    "user_id": "U0BC46H2U3C",
+    "channel_id": "*****",
+    "work_style": "work_remote",
+    "medication": "meds_taken"
+  },
+  {
+    "week_start_date": "2026-06-22",
+    "created_at": "2026-06-28T11:28:42.840Z",
+    "meal": "meal_yes",
+    "depression": "depression_yes",
+    "message_ts": "1782646095.739859",
+    "condition": "condition_excellent",
+    "sleep": "sleep_slight",
+    "record_date": "2026-06-28",
+    "record_id": "U0BC46H2U3C#2026-06-28",
+    "day_of_week": "Sun",
+    "sleep_score": 0.75,
+    "condition_score": 1,
+    "user_id": "U0BC46H2U3C",
+    "channel_id": "*****",
+    "work_style": "work_office",
+    "medication": "meds_taken"
+  },
+  {
+    "week_start_date": "2026-06-29",
+    "created_at": "2026-06-29T07:28:15.408Z",
+    "meal": "meal_yes",
+    "depression": "depression_yes",
+    "message_ts": "1782718012.854499",
+    "condition": "condition_excellent",
+    "sleep": "sleep_good",
+    "record_date": "2026-06-29",
+    "record_id": "U0BC46H2U3C#2026-06-29",
+    "day_of_week": "Mon",
+    "sleep_score": 1,
+    "condition_score": 1,
+    "user_id": "U0BC46H2U3C",
+    "channel_id": "*****",
+    "work_style": "work_office",
+    "medication": "meds_taken"
+  }
+]
+```
+
 ## デプロイ
 
 開発が完了したら、`slack deploy`コマンドを使用してアプリをSlackインフラストラクチャにデプロイします。
