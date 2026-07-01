@@ -33,6 +33,7 @@ DenoとSlack CLIを使用して構築されています。
 -   **体調チェックの開始**: Slackのショートカットメニューから簡単に体調チェックを開始できます。
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/a167e8ec-10c9-45d7-9bb0-d2bddcd89401" />
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/6ffb2188-5842-4eca-bada-6f57adc65031" />
 
 -   **最近ではTable（表形式）やData Visualization（データ可視化）といった新しいコンポーネントも利用可能になり、より表現力豊かなUIを構築できます。
 -   **データ保存**: 回答内容はSlackのDatastoreに保存され、後から参照することが可能です。
