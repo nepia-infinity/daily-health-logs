@@ -7,9 +7,9 @@ export async function fetchBulkDailyHealthLogs(
   weekStartDate: string,
 ) {
 
-  // グラフ描画側で週の開始日と一致するものをフィルタリングする、ここでは5件固定で取得する
+  // グラフ描画側で週の開始日と一致するものをフィルタリングする、ここでは最大で7件固定で取得する
   const dateUtils = new DateUtils();
-  const ids = Array.from({ length: 5 }, (_, days) =>
+  const ids = Array.from({ length: 7 }, (_, days) =>
     `${userId}#${dateUtils.addDays(weekStartDate, days)}`
   );
 
@@ -19,18 +19,16 @@ export async function fetchBulkDailyHealthLogs(
     ids: ids,
   });
 
+  // APIのレスポンスがエラーの場合はエラーをスローする
   if (!response.ok) {
     throw new Error(
       `Failed to bulkGet daily health logs: ${response.error ?? "unknown error"}`,
     );
   }
 
-  // 配列に何もオブジェクトがない場合はエラーをスローする
-  if(!response.items?.length) {
-    throw new Error("No items found in the response.");
-  }
-
   console.log("=== Datastore Response ===");
   console.log(JSON.stringify(response, null, 2));
+
+  // Datastoreにその週のデータが0件の場合は空配列を返す
   return response.items ?? [];
 }
