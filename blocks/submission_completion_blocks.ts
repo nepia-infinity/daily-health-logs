@@ -61,8 +61,7 @@ export async function buildSubmissionCompletionBlocks(
 ): Promise<SlackBlock[]> {
   const isFriday = params.dayOfWeek === "Fri";
   const hasLowMood = params.lowMoodStatus === "low_mood_present";
-  const missedMedication =
-    params.medicationStatus === "medication_not_taken";
+  const missedMedication = params.medicationStatus === "medication_not_taken";
 
   const blocks: SlackBlock[] = [];
 
