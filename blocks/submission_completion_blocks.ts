@@ -27,17 +27,17 @@ function toDisplayLabel(
 
 /**
  * 提出ブロックを生成するための引数の型定義
- * @property {string} depression - 気分の落ち込みの有無 (例: "depression_yes" | "depression_no")
+ * @property {string} lowMoodStatus - 気分の落ち込みの有無 (例: "low_mood_present" | "low_mood_absent")
  * @property {string} dayOfWeek - 回答日の曜日（英語の短縮形） (例: "Mon" | "Tue" | "Wed" | "Thu" | "Fri")
- * @property {string} medication - 服薬状況 (例: "meds_taken" | "meds_not_taken")
+ * @property {string} medicationStatus - 服薬状況 (例: "medication_taken" | "medication_not_taken")
  * @property {string} recordDate - 回答日（YYYY-MM-DD形式）
  * @property {string} weekStartDate - 週の開始日（YYYY-MM-DD形式）
  * @property {string} userId - SlackユーザーID
  */
 export type CompletionBlockParams = {
-  depression: string;
+  lowMoodStatus: string;
   dayOfWeek: string;
-  medication: string;
+  medicationStatus: string;
   recordDate: string;
   weekStartDate: string;
   userId: string;
@@ -60,8 +60,9 @@ export async function buildSubmissionCompletionBlocks(
   client: SlackAPIClient,
 ): Promise<SlackBlock[]> {
   const isFriday = params.dayOfWeek === "Fri";
-  const isDepressed = params.depression === "depression_yes";
-  const forgotMeds = params.medication === "meds_not_taken";
+  const hasLowMood = params.lowMoodStatus === "low_mood_present";
+  const missedMedication =
+    params.medicationStatus === "medication_not_taken";
 
   const blocks: SlackBlock[] = [];
 
@@ -69,7 +70,7 @@ export async function buildSubmissionCompletionBlocks(
   let mainMessage = ":white_check_mark: 体調チェックを送信しました。";
 
   // きちんと服薬をしており、気分の落ち込みもなく金曜以外の処理
-  if (!isFriday && !forgotMeds && !isDepressed) {
+  if (!isFriday && !missedMedication && !hasLowMood) {
     blocks.push({
       type: "section",
       text: {
@@ -80,7 +81,7 @@ export async function buildSubmissionCompletionBlocks(
   }
 
   // 服薬のアラートメッセージ
-  if (forgotMeds) {
+  if (missedMedication) {
     blocks.push({
       "type": "header",
       "text": {
@@ -118,7 +119,7 @@ export async function buildSubmissionCompletionBlocks(
   }
 
   // グラフとテーブル
-  if (isFriday || isDepressed) {
+  if (isFriday || hasLowMood) {
     const weekStartDate = params.weekStartDate;
     const weekEndDate = params.recordDate;
 
@@ -137,7 +138,7 @@ export async function buildSubmissionCompletionBlocks(
     console.log(JSON.stringify(sortedLogs, null, 2));
 
     // 2026-06-22 〜 2026-06-28のように表示する
-    // isDepressedがtrueの場合、必ずしも金曜とは限らないため、weekEndDateは今日の日付とする
+    // hasLowMoodがtrueの場合、必ずしも金曜とは限らないため、weekEndDateは今日の日付とする
     mainMessage = `:date: サマリー（${weekStartDate} 〜 ${weekEndDate}）\n`;
     let subMessage = "";
 
@@ -153,12 +154,12 @@ export async function buildSubmissionCompletionBlocks(
     });
 
     // 条件に応じてsubMessageを変更する
-    if (isDepressed) {
+    if (hasLowMood) {
       subMessage =
         ":stethoscope: 困っていることは抱え込まず早めに相談してくださいね。\n";
     }
 
-    if (isFriday && isDepressed) {
+    if (isFriday && hasLowMood) {
       subMessage = "最近無理しすぎていませんか？\n";
     }
 
