@@ -1,8 +1,5 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
-import {
-  getConditionScore,
-  getSleepScore,
-} from "../utils/health_scores.ts";
+import { getConditionScore, getSleepScore } from "../utils/health_scores.ts";
 
 const DAILY_HEALTH_LOGS_DATASTORE = "daily_health_logs";
 
