@@ -1,6 +1,5 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
 import { healthCheckBlocks } from "../blocks/daily_health_check_blocks.ts";
-import { buildSubmissionCompletionBlocks } from "../blocks/submission_completion_blocks.ts";
 import { DateUtils } from "../utils/date_utils.ts";
 import { fetchUserTimeZone } from "../utils/fetch_slack_user_info.ts";
 
@@ -212,37 +211,6 @@ export default SlackFunction(
       const recordDate = dateUtils.formatDate(now);
       const weekStartDate = dateUtils.getWeekStartDate(now);
       const createdAt = now.toISOString();
-
-      // ボタン押下時のBlocksを呼び出す
-      const submissionCompletionBlocks = await buildSubmissionCompletionBlocks(
-        {
-          depression: depression,
-          dayOfWeek: dayOfWeek,
-          medication: medication,
-          meal: meal,
-          sleep: sleep,
-          condition: condition,
-          workStyle: workStyle,
-          dateUtils,
-          now,
-          userId: body.user.id,
-        },
-        client,
-      );
-
-      // ボタン押下時にアンケート内容を書き替える
-      const updateResponse = await client.chat.update({
-        channel: channelId,
-        ts: messageTs,
-        text: "体調チェックを送信しました。",
-        blocks: submissionCompletionBlocks,
-      });
-
-      if (!updateResponse.ok) {
-        return {
-          error: `メッセージ更新に失敗しました: ${updateResponse.error}`,
-        };
-      }
 
       // 次のステップへ渡す値をここで定義
       // 引数を変更する際は、save_raw-data.ts, workflows/test_workflows.tsの修正が必要

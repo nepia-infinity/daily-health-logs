@@ -1,4 +1,5 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
+import { buildSubmissionCompletionBlocks } from "../blocks/submission_completion_blocks.ts";
 
 /**
  * Datastoreへの保存完了後に、体調サマリーをSlackメッセージへ反映するFunction
@@ -64,10 +65,35 @@ export const UpdateHealthSummaryFunction = DefineFunction({
 
 export default SlackFunction(
   UpdateHealthSummaryFunction,
-  ({ inputs }) => {
+  async ({ inputs, client }) => {
     console.log(
       `体調サマリー更新ステップを開始します: ${inputs.record_id}`,
     );
+
+    const submissionCompletionBlocks = await buildSubmissionCompletionBlocks(
+      {
+        depression: inputs.depression,
+        dayOfWeek: inputs.day_of_week,
+        medication: inputs.medication,
+        recordDate: inputs.record_date,
+        weekStartDate: inputs.week_start_date,
+        userId: inputs.user_id,
+      },
+      client,
+    );
+
+    const updateResponse = await client.chat.update({
+      channel: inputs.channel_id,
+      ts: inputs.message_ts,
+      text: "体調チェックを送信しました。",
+      blocks: submissionCompletionBlocks,
+    });
+
+    if (!updateResponse.ok) {
+      return {
+        error: `メッセージ更新に失敗しました: ${updateResponse.error}`,
+      };
+    }
 
     return {
       outputs: {},

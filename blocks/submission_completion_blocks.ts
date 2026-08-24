@@ -1,5 +1,4 @@
 import type { SlackAPIClient } from "deno-slack-sdk/types.ts";
-import { DateUtils } from "../utils/date_utils.ts";
 import { fetchBulkDailyHealthLogs } from "../utils/test_fetch_bulk_daily_health_logs.ts";
 
 /**
@@ -15,12 +14,8 @@ export type CompletionBlockParams = {
   depression: string;
   dayOfWeek: string;
   medication: string;
-  meal: string;
-  sleep: string;
-  condition: string;
-  workStyle: string;
-  dateUtils: DateUtils;
-  now: Date;
+  recordDate: string;
+  weekStartDate: string;
   userId: string;
 };
 
@@ -50,7 +45,7 @@ export async function buildSubmissionCompletionBlocks(
   let mainMessage = ":white_check_mark: 体調チェックを送信しました。";
 
   // きちんと服薬をしており、気分の落ち込みもなく金曜以外の処理
-  if(!isFriday && !forgotMeds && !isDepressed){
+  if (!isFriday && !forgotMeds && !isDepressed) {
     blocks.push({
       type: "section",
       text: {
@@ -63,14 +58,14 @@ export async function buildSubmissionCompletionBlocks(
   // 服薬のアラートメッセージ
   if (forgotMeds) {
     blocks.push({
-			"type": "header",
-			"text": {
-				"type": "plain_text",
-				"text": ":pill: お薬の飲み忘れはありませんか？",
-				"emoji": true
-			},
-			"level": 2
-		})
+      "type": "header",
+      "text": {
+        "type": "plain_text",
+        "text": ":pill: お薬の飲み忘れはありませんか？",
+        "emoji": true,
+      },
+      "level": 2,
+    });
 
     blocks.push({
       type: "section",
@@ -100,16 +95,20 @@ export async function buildSubmissionCompletionBlocks(
 
   // グラフとテーブル
   if (isFriday || isDepressed) {
-    const weekStartDate = params.dateUtils.getWeekStartDate(params.now); // 例: "2026-06-22"
-    const weekEndDate = params.dateUtils.formatDate(params.now);
-    
+    const weekStartDate = params.weekStartDate;
+    const weekEndDate = params.recordDate;
+
     // datastoreから取得したデータ
-    const dailyHealthLogs = await fetchBulkDailyHealthLogs(client, params.userId, weekStartDate);
+    const dailyHealthLogs = await fetchBulkDailyHealthLogs(
+      client,
+      params.userId,
+      weekStartDate,
+    );
 
     // 週の開始日と一致するデータをフィルタリングし、record_dateでソートする
     const sortedLogs = dailyHealthLogs
-    .filter((log) => log.week_start_date === weekStartDate)
-    .sort((a, b) => a.record_date.localeCompare(b.record_date));
+      .filter((log) => log.week_start_date === weekStartDate)
+      .sort((a, b) => a.record_date.localeCompare(b.record_date));
     console.log("=== Filtered and Sorted Logs ===");
     console.log(JSON.stringify(sortedLogs, null, 2));
 
@@ -120,18 +119,19 @@ export async function buildSubmissionCompletionBlocks(
 
     // ヘッダーを追加
     blocks.push({
-			"type": "header",
-			"text": {
-				"type": "plain_text",
-				"text": mainMessage,
-				"emoji": true
-			},
-			"level": 1
-		});
+      "type": "header",
+      "text": {
+        "type": "plain_text",
+        "text": mainMessage,
+        "emoji": true,
+      },
+      "level": 1,
+    });
 
     // 条件に応じてsubMessageを変更する
     if (isDepressed) {
-      subMessage = ":stethoscope: 困っていることは抱え込まず早めに相談してくださいね。\n";
+      subMessage =
+        ":stethoscope: 困っていることは抱え込まず早めに相談してくださいね。\n";
     }
 
     if (isFriday && isDepressed) {
