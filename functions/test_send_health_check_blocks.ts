@@ -3,29 +3,11 @@ import { healthCheckBlocks } from "../blocks/daily_health_check_blocks.ts";
 import { submissionProgressBlocks } from "../blocks/submission_progress_blocks.ts";
 import { DateUtils } from "../utils/date_utils.ts";
 import { fetchUserTimeZone } from "../utils/fetch_slack_user_info.ts";
-
-type SelectedOptionAction = {
-  selected_option?: {
-    value?: string;
-  };
-};
-
-type BlockStateValues = Record<string, Record<string, SelectedOptionAction>>;
-
-function getSelectedValue(
-  values: BlockStateValues,
-  actionId: string,
-): string {
-  for (const actions of Object.values(values)) {
-    const action = actions[actionId];
-
-    if (action?.selected_option?.value) {
-      return action.selected_option.value;
-    }
-  }
-
-  return "";
-}
+import {
+  getHealthCheckAnswers,
+  getMissingHealthCheckAnswerLabels,
+  HEALTH_CHECK_ACTION_IDS,
+} from "../utils/health_check_answers.ts";
 
 /**
  * 体調チェックBlock KitをSlack AppからDMでテスト送信するFunction
@@ -141,18 +123,20 @@ export default SlackFunction(
   },
 ).addBlockActionsHandler(
   [
-    "action_meal",
-    "action_sleep",
-    "action_condition",
-    "action_work_style",
-    "action_medication_status",
-    "action_low_mood_status",
+    HEALTH_CHECK_ACTION_IDS.mealStatus,
+    HEALTH_CHECK_ACTION_IDS.sleepStatus,
+    HEALTH_CHECK_ACTION_IDS.condition,
+    HEALTH_CHECK_ACTION_IDS.workStyle,
+    HEALTH_CHECK_ACTION_IDS.medicationStatus,
+    HEALTH_CHECK_ACTION_IDS.lowMoodStatus,
     "submit_survey",
     "cancel_survey",
   ],
   async ({ action, body, client }) => {
-    console.log("Block Kit action received:");
-    console.log(JSON.stringify(action, null, 2));
+    console.log(JSON.stringify({
+      event: "health_check_action_received",
+      action_id: action.action_id,
+    }));
 
     // console.log("=== Body Data ===");
     // console.log(JSON.stringify(body, null, 2));
@@ -194,20 +178,40 @@ export default SlackFunction(
     }
 
     if (action.action_id === "submit_survey") {
-      // ラジオボタン押下内容を取得する
+      // ラジオボタン押下内容を取得し、全項目が回答済みか確認する
       const values = body.state?.values ?? {};
-      const mealStatus = getSelectedValue(values, "action_meal");
-      const sleepStatus = getSelectedValue(values, "action_sleep");
-      const condition = getSelectedValue(values, "action_condition");
-      const workStyle = getSelectedValue(values, "action_work_style");
-      const medicationStatus = getSelectedValue(
-        values,
-        "action_medication_status",
-      );
-      const lowMoodStatus = getSelectedValue(
-        values,
-        "action_low_mood_status",
-      );
+      const answers = getHealthCheckAnswers(values);
+      const missingAnswerLabels =
+        getMissingHealthCheckAnswerLabels(answers);
+
+      if (missingAnswerLabels.length > 0) {
+        const validationMessage =
+          `:warning: 未回答の項目があります：${missingAnswerLabels.join("、")}`;
+        const validationResponse = await client.chat.postMessage({
+          channel: channelId,
+          text: validationMessage,
+        });
+
+        if (!validationResponse.ok) {
+          console.error(JSON.stringify({
+            event: "health_check_validation_message_failed",
+            error: validationResponse.error ?? "unknown_error",
+          }));
+        }
+
+        return {
+          completed: false,
+        };
+      }
+
+      const {
+        mealStatus,
+        sleepStatus,
+        condition,
+        workStyle,
+        medicationStatus,
+        lowMoodStatus,
+      } = answers;
 
       // 送信ボタンを押した直後に、保存中メッセージへ切り替える
       const progressUpdateResponse = await client.chat.update({
@@ -219,9 +223,10 @@ export default SlackFunction(
 
       // 表示の更新に失敗しても、回答データの保存処理は継続する
       if (!progressUpdateResponse.ok) {
-        console.error(
-          `保存中メッセージへの更新に失敗しました: ${progressUpdateResponse.error}`,
-        );
+        console.error(JSON.stringify({
+          event: "health_check_progress_update_failed",
+          error: progressUpdateResponse.error ?? "unknown_error",
+        }));
       }
 
       // ユーザーのtimezoneを取得する
@@ -235,7 +240,7 @@ export default SlackFunction(
       const createdAt = now.toISOString();
 
       // 次のステップへ渡す値をここで定義
-      // 引数を変更する際は、save_raw-data.ts, workflows/test_workflows.tsの修正が必要
+      // 引数を変更する際は、functions/save_raw_data.ts と workflows/test_workflow.ts の修正が必要
       await client.functions.completeSuccess({
         function_execution_id: body.function_data.execution_id,
         outputs: {
