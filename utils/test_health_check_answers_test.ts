@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { deepStrictEqual } from "node:assert/strict";
 import {
   type BlockStateValues,
   getHealthCheckAnswers,
@@ -39,7 +39,7 @@ Deno.test("全項目の選択値をBlock Kitのstateから取得できる", () =
     },
   };
 
-  assertEquals(getHealthCheckAnswers(values), {
+  deepStrictEqual(getHealthCheckAnswers(values), {
     mealStatus: "meal_yes",
     sleepStatus: "sleep_good",
     condition: "condition_excellent",
@@ -68,7 +68,7 @@ Deno.test("未回答の項目名だけを取得できる", () => {
     },
   });
 
-  assertEquals(getMissingHealthCheckAnswerLabels(answers), [
+  deepStrictEqual(getMissingHealthCheckAnswerLabels(answers), [
     "睡眠",
     "就業スタイル",
     "気分の落ち込み",
