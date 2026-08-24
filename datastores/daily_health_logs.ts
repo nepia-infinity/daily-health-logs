@@ -35,13 +35,13 @@ const DailyHealthLogsDatastore = DefineDatastore({
       description:
         "回答が送信された日時。ISO 8601形式。例: 2026-06-22T10:15:22+09:00",
     },
-    meal: {
+    meal_status: {
       type: Schema.types.string,
-      description: "食事の回答。例: meal_yes, meal_no",
+      description: "食事状況の回答。例: meal_yes, meal_no",
     },
-    sleep: {
+    sleep_status: {
       type: Schema.types.string,
-      description: "睡眠の回答。例: sleep_good, sleep_none",
+      description: "睡眠状況の回答。例: sleep_good, sleep_none",
     },
     sleep_score: {
       type: Schema.types.number,
