@@ -1,5 +1,6 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
 import { healthCheckBlocks } from "../blocks/daily_health_check_blocks.ts";
+import { submissionProgressBlocks } from "../blocks/submission_progress_blocks.ts";
 import { DateUtils } from "../utils/date_utils.ts";
 import { fetchUserTimeZone } from "../utils/fetch_slack_user_info.ts";
 
@@ -201,6 +202,21 @@ export default SlackFunction(
       const workStyle = getSelectedValue(values, "action_work_style");
       const medication = getSelectedValue(values, "action_medication");
       const depression = getSelectedValue(values, "action_depression");
+
+      // 送信ボタンを押した直後に、保存中メッセージへ切り替える
+      const progressUpdateResponse = await client.chat.update({
+        channel: channelId,
+        ts: messageTs,
+        text: "Datastoreに回答を保存しています...",
+        blocks: submissionProgressBlocks,
+      });
+
+      // 表示の更新に失敗しても、回答データの保存処理は継続する
+      if (!progressUpdateResponse.ok) {
+        console.error(
+          `保存中メッセージへの更新に失敗しました: ${progressUpdateResponse.error}`,
+        );
+      }
 
       // ユーザーのtimezoneを取得する
       const userTz = await fetchUserTimeZone(client, body.user.id);
