@@ -28,13 +28,13 @@ export const UpdateHealthSummaryFunction = DefineFunction({
         type: Schema.slack.types.message_ts,
         description: "更新対象メッセージのタイムスタンプ",
       },
-      medication: {
+      medication_status: {
         type: Schema.types.string,
-        description: "服薬の回答",
+        description: "服薬状況の回答",
       },
-      depression: {
+      low_mood_status: {
         type: Schema.types.string,
-        description: "気分の落ち込みの回答",
+        description: "気分の落ち込みの有無",
       },
       record_date: {
         type: Schema.types.string,
@@ -54,8 +54,8 @@ export const UpdateHealthSummaryFunction = DefineFunction({
       "user_id",
       "channel_id",
       "message_ts",
-      "medication",
-      "depression",
+      "medication_status",
+      "low_mood_status",
       "record_date",
       "week_start_date",
       "day_of_week",
@@ -72,9 +72,9 @@ export default SlackFunction(
 
     const submissionCompletionBlocks = await buildSubmissionCompletionBlocks(
       {
-        depression: inputs.depression,
+        lowMoodStatus: inputs.low_mood_status,
         dayOfWeek: inputs.day_of_week,
-        medication: inputs.medication,
+        medicationStatus: inputs.medication_status,
         recordDate: inputs.record_date,
         weekStartDate: inputs.week_start_date,
         userId: inputs.user_id,
