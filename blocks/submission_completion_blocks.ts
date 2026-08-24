@@ -16,7 +16,7 @@ const mealStatusLabels: Record<string, string> = {
 
 function toDisplayLabel(
   value: unknown,
-  labels: Record<string, string>,
+  labels: Record<string, string> = {},
 ): string {
   if (typeof value !== "string" || value.length === 0) {
     return "未回答";
@@ -241,7 +241,7 @@ export async function buildSubmissionCompletionBlocks(
           },
           {
             type: "raw_text",
-            text: toDisplayLabel(log.day_of_week, {}),
+            text: toDisplayLabel(log.day_of_week),
           },
           {
             type: "raw_text",
