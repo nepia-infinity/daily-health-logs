@@ -138,9 +138,6 @@ export default SlackFunction(
       action_id: action.action_id,
     }));
 
-    // console.log("=== Body Data ===");
-    // console.log(JSON.stringify(body, null, 2));
-
     const channelId = body.channel?.id;
     const messageTs = body.message?.ts;
 
