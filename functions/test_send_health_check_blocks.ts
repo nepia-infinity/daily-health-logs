@@ -61,13 +61,13 @@ export const SendTestHealthCheckBlocksFunction = DefineFunction({
         type: Schema.slack.types.message_ts,
         description: "体調チェックメッセージのタイムスタンプ",
       },
-      meal: {
+      meal_status: {
         type: Schema.types.string,
-        description: "食事の回答",
+        description: "食事状況の回答",
       },
-      sleep: {
+      sleep_status: {
         type: Schema.types.string,
-        description: "睡眠の回答",
+        description: "睡眠状況の回答",
       },
       condition: {
         type: Schema.types.string,
@@ -106,8 +106,8 @@ export const SendTestHealthCheckBlocksFunction = DefineFunction({
       "user_id",
       "channel_id",
       "message_ts",
-      "meal",
-      "sleep",
+      "meal_status",
+      "sleep_status",
       "condition",
       "work_style",
       "medication",
@@ -196,8 +196,8 @@ export default SlackFunction(
     if (action.action_id === "submit_survey") {
       // ラジオボタン押下内容を取得する
       const values = body.state?.values ?? {};
-      const meal = getSelectedValue(values, "action_meal");
-      const sleep = getSelectedValue(values, "action_sleep");
+      const mealStatus = getSelectedValue(values, "action_meal");
+      const sleepStatus = getSelectedValue(values, "action_sleep");
       const condition = getSelectedValue(values, "action_condition");
       const workStyle = getSelectedValue(values, "action_work_style");
       const medication = getSelectedValue(values, "action_medication");
@@ -236,8 +236,8 @@ export default SlackFunction(
           user_id: body.user.id,
           channel_id: channelId,
           message_ts: messageTs,
-          meal,
-          sleep,
+          meal_status: mealStatus,
+          sleep_status: sleepStatus,
           condition,
           work_style: workStyle,
           medication,
