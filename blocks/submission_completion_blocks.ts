@@ -1,6 +1,30 @@
 import type { SlackAPIClient } from "deno-slack-sdk/types.ts";
 import { fetchBulkDailyHealthLogs } from "../utils/test_fetch_bulk_daily_health_logs.ts";
 
+const workStyleLabels: Record<string, string> = {
+  work_office: "出社",
+  work_remote: "在宅勤務",
+  work_hybrid: "ハイブリッド",
+  work_dayoff: "休み",
+  work_off: "休み",
+};
+
+const mealStatusLabels: Record<string, string> = {
+  meal_yes: "きちんと取れている",
+  meal_no: "取れていない",
+};
+
+function toDisplayLabel(
+  value: unknown,
+  labels: Record<string, string>,
+): string {
+  if (typeof value !== "string" || value.length === 0) {
+    return "未回答";
+  }
+
+  return labels[value] ?? value;
+}
+
 /**
  * 提出ブロックを生成するための引数の型定義
  * @property {string} depression - 気分の落ち込みの有無 (例: "depression_yes" | "depression_no")
@@ -210,16 +234,20 @@ export async function buildSubmissionCompletionBlocks(
           { type: "raw_text", text: "Day" },
           { type: "raw_text", text: "Meal Status" },
         ],
-        [
-          { type: "raw_text", text: "在宅勤務" },
-          { type: "raw_text", text: "Mon" },
-          { type: "raw_number", value: 1, text: "きちんと取れている" },
-        ],
-        [
-          { type: "raw_text", text: "出社" },
-          { type: "raw_text", text: "Fri" },
-          { type: "raw_number", value: 1, text: "きちんと取れている" },
-        ],
+        ...sortedLogs.map((log) => [
+          {
+            type: "raw_text",
+            text: toDisplayLabel(log.work_style, workStyleLabels),
+          },
+          {
+            type: "raw_text",
+            text: toDisplayLabel(log.day_of_week, {}),
+          },
+          {
+            type: "raw_text",
+            text: toDisplayLabel(log.meal, mealStatusLabels),
+          },
+        ]),
       ],
     });
   }
