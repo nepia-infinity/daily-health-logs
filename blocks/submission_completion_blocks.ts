@@ -245,7 +245,7 @@ export async function buildSubmissionCompletionBlocks(
           },
           {
             type: "raw_text",
-            text: toDisplayLabel(log.meal, mealStatusLabels),
+            text: toDisplayLabel(log.meal_status, mealStatusLabels),
           },
         ]),
       ],
