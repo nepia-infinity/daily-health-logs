@@ -134,8 +134,12 @@ export async function buildSubmissionCompletionBlocks(
     const sortedLogs = dailyHealthLogs
       .filter((log) => log.week_start_date === weekStartDate)
       .sort((a, b) => a.record_date.localeCompare(b.record_date));
-    console.log("=== Filtered and Sorted Logs ===");
-    console.log(JSON.stringify(sortedLogs, null, 2));
+    console.log(JSON.stringify({
+      event: "weekly_health_logs_prepared",
+      week_start_date: weekStartDate,
+      record_count: sortedLogs.length,
+      record_dates: sortedLogs.map((log) => log.record_date),
+    }));
 
     // 2026-06-22 〜 2026-06-28のように表示する
     // hasLowMoodがtrueの場合、必ずしも金曜とは限らないため、weekEndDateは今日の日付とする
