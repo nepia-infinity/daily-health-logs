@@ -6,8 +6,8 @@ import { fetchBulkDailyHealthLogs } from "../utils/test_fetch_bulk_daily_health_
  * @property {string} depression - 気分の落ち込みの有無 (例: "depression_yes" | "depression_no")
  * @property {string} dayOfWeek - 回答日の曜日（英語の短縮形） (例: "Mon" | "Tue" | "Wed" | "Thu" | "Fri")
  * @property {string} medication - 服薬状況 (例: "meds_taken" | "meds_not_taken")
- * @property {DateUtils} dateUtils - 日付計算ユーティリティのインスタンス
- * @property {Date} now - 実行時の日時オブジェクト
+ * @property {string} recordDate - 回答日（YYYY-MM-DD形式）
+ * @property {string} weekStartDate - 週の開始日（YYYY-MM-DD形式）
  * @property {string} userId - SlackユーザーID
  */
 export type CompletionBlockParams = {
@@ -138,51 +138,67 @@ export async function buildSubmissionCompletionBlocks(
       subMessage = "最近無理しすぎていませんか？\n";
     }
 
-    // 既存blocksにsubMessageを追加
-    blocks.push({
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: subMessage,
-      },
-    });
-
-    // グラフブロック
-    blocks.push({
-      type: "data_visualization",
-      block_id: "viz-line-multi",
-      title: "睡眠と体調の推移",
-      chart: {
-        type: "line",
-        series: [
-          {
-            name: "睡眠",
-            data: [
-              { label: "Mon", value: 1 },
-              { label: "Tue", value: 0.75 },
-              { label: "Wed", value: 0.5 },
-              { label: "Thu", value: 0.25 },
-              { label: "Fri", value: 0.5 },
-            ],
-          },
-          {
-            name: "体調",
-            data: [
-              { label: "Mon", value: 1 },
-              { label: "Tue", value: 0.75 },
-              { label: "Wed", value: 0.25 },
-              { label: "Thu", value: 0.25 },
-              { label: "Fri", value: 0.75 },
-            ],
-          },
-        ],
-        axis_config: {
-          categories: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-          x_label: "Day",
-          y_label: "Score",
+    // 案内文が空の場合は、空文字のsectionを追加しない
+    if (subMessage) {
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: subMessage,
         },
-      },
-    });
+      });
+    }
+
+    // Datastoreから取得できたスコアだけをグラフへ反映する
+    const chartLogs = sortedLogs.filter((log) =>
+      typeof log.day_of_week === "string" &&
+      typeof log.sleep_score === "number" &&
+      Number.isFinite(log.sleep_score) &&
+      typeof log.condition_score === "number" &&
+      Number.isFinite(log.condition_score)
+    );
+
+    if (chartLogs.length > 0) {
+      const categories = chartLogs.map((log) => log.day_of_week);
+
+      blocks.push({
+        type: "data_visualization",
+        block_id: "viz-line-multi",
+        title: "睡眠と体調の推移",
+        chart: {
+          type: "line",
+          series: [
+            {
+              name: "睡眠",
+              data: chartLogs.map((log) => ({
+                label: log.day_of_week,
+                value: log.sleep_score,
+              })),
+            },
+            {
+              name: "体調",
+              data: chartLogs.map((log) => ({
+                label: log.day_of_week,
+                value: log.condition_score,
+              })),
+            },
+          ],
+          axis_config: {
+            categories,
+            x_label: "Day",
+            y_label: "Score",
+          },
+        },
+      });
+    } else {
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "この週は、グラフに表示できる体調データがまだありません。",
+        },
+      });
+    }
 
     // テーブルブロック
     blocks.push({
