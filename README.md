@@ -129,7 +129,7 @@ JSONのログ
     "week_start_date": "2026-06-22",
     "created_at": "2026-06-27T06:51:36.486Z",
     "meal_status": "meal_yes",
-    "depression": "depression_no",
+    "low_mood_status": "depression_no",
     "message_ts": "1782543071.342989",
     "condition": "condition_excellent",
     "sleep_status": "sleep_good",
@@ -141,13 +141,13 @@ JSONのログ
     "user_id": "U0BC46H2U3C",
     "channel_id": "*****",
     "work_style": "work_remote",
-    "medication": "meds_forgot"
+    "medication_status": "meds_forgot"
   },
   {
     "week_start_date": "2026-06-29",
     "created_at": "2026-06-30T04:42:46.352Z",
     "meal_status": "meal_yes",
-    "depression": "depression_yes",
+    "low_mood_status": "depression_yes",
     "message_ts": "1782794482.717439",
     "condition": "condition_excellent",
     "sleep_status": "sleep_slight",
@@ -159,13 +159,13 @@ JSONのログ
     "user_id": "U0BC46H2U3C",
     "channel_id": "*****",
     "work_style": "work_remote",
-    "medication": "meds_taken"
+    "medication_status": "meds_taken"
   },
   {
     "week_start_date": "2026-06-22",
     "created_at": "2026-06-28T11:28:42.840Z",
     "meal_status": "meal_yes",
-    "depression": "depression_yes",
+    "low_mood_status": "depression_yes",
     "message_ts": "1782646095.739859",
     "condition": "condition_excellent",
     "sleep_status": "sleep_slight",
@@ -177,13 +177,13 @@ JSONのログ
     "user_id": "U0BC46H2U3C",
     "channel_id": "*****",
     "work_style": "work_office",
-    "medication": "meds_taken"
+    "medication_status": "meds_taken"
   },
   {
     "week_start_date": "2026-06-29",
     "created_at": "2026-06-29T07:28:15.408Z",
     "meal_status": "meal_yes",
-    "depression": "depression_yes",
+    "low_mood_status": "depression_yes",
     "message_ts": "1782718012.854499",
     "condition": "condition_excellent",
     "sleep_status": "sleep_good",
@@ -195,7 +195,7 @@ JSONのログ
     "user_id": "U0BC46H2U3C",
     "channel_id": "*****",
     "work_style": "work_office",
-    "medication": "meds_taken"
+    "medication_status": "meds_taken"
   }
 ]
 ```
