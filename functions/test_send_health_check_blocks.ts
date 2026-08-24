@@ -181,12 +181,12 @@ export default SlackFunction(
       // ラジオボタン押下内容を取得し、全項目が回答済みか確認する
       const values = body.state?.values ?? {};
       const answers = getHealthCheckAnswers(values);
-      const missingAnswerLabels =
-        getMissingHealthCheckAnswerLabels(answers);
+      const missingAnswerLabels = getMissingHealthCheckAnswerLabels(answers);
 
       if (missingAnswerLabels.length > 0) {
-        const validationMessage =
-          `:warning: 未回答の項目があります：${missingAnswerLabels.join("、")}`;
+        const validationMessage = `:warning: 未回答の項目があります：${
+          missingAnswerLabels.join("、")
+        }`;
         const validationResponse = await client.chat.postMessage({
           channel: channelId,
           text: validationMessage,
