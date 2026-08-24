@@ -42,13 +42,13 @@ export const SaveRawDataFunction = DefineFunction({
         type: Schema.slack.types.message_ts,
         description: "体調チェックメッセージのタイムスタンプ",
       },
-      meal: {
+      meal_status: {
         type: Schema.types.string,
-        description: "食事の回答",
+        description: "食事状況の回答",
       },
-      sleep: {
+      sleep_status: {
         type: Schema.types.string,
-        description: "睡眠の回答",
+        description: "睡眠状況の回答",
       },
       condition: {
         type: Schema.types.string,
@@ -87,8 +87,8 @@ export const SaveRawDataFunction = DefineFunction({
       "user_id",
       "channel_id",
       "message_ts",
-      "meal",
-      "sleep",
+      "meal_status",
+      "sleep_status",
       "condition",
       "work_style",
       "medication",
@@ -125,9 +125,9 @@ export default SlackFunction(
         week_start_date: inputs.week_start_date,
         day_of_week: inputs.day_of_week,
         created_at: inputs.created_at,
-        meal: inputs.meal,
-        sleep: inputs.sleep,
-        sleep_score: toScore("action_sleep", inputs.sleep),
+        meal: inputs.meal_status,
+        sleep: inputs.sleep_status,
+        sleep_score: toScore("action_sleep", inputs.sleep_status),
         condition: inputs.condition,
         condition_score: toScore("action_condition", inputs.condition),
         work_style: inputs.work_style,
