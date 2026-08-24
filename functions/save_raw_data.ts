@@ -99,6 +99,15 @@ export const SaveRawDataFunction = DefineFunction({
       "created_at",
     ],
   },
+  output_parameters: {
+    properties: {
+      record_id: {
+        type: Schema.types.string,
+        description: "Datastoreに保存したレコードID",
+      },
+    },
+    required: ["record_id"],
+  },
 });
 
 export default SlackFunction(
@@ -136,7 +145,9 @@ export default SlackFunction(
     }
 
     return {
-      outputs: {},
+      outputs: {
+        record_id: recordId,
+      },
     };
   },
 );

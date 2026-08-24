@@ -24,6 +24,7 @@ const TestHealthCheckWorkflow = DefineWorkflow({
   },
 });
 
+// 入力フォームを投稿するステップ
 const healthCheckStep = TestHealthCheckWorkflow.addStep(
   SendTestHealthCheckBlocksFunction,
   {
@@ -31,20 +32,24 @@ const healthCheckStep = TestHealthCheckWorkflow.addStep(
   },
 );
 
-TestHealthCheckWorkflow.addStep(SaveRawDataFunction, {
-  user_id: healthCheckStep.outputs.user_id,
-  channel_id: healthCheckStep.outputs.channel_id,
-  message_ts: healthCheckStep.outputs.message_ts,
-  meal: healthCheckStep.outputs.meal,
-  sleep: healthCheckStep.outputs.sleep,
-  condition: healthCheckStep.outputs.condition,
-  work_style: healthCheckStep.outputs.work_style,
-  medication: healthCheckStep.outputs.medication,
-  depression: healthCheckStep.outputs.depression,
-  record_date: healthCheckStep.outputs.record_date,
-  week_start_date: healthCheckStep.outputs.week_start_date,
-  day_of_week: healthCheckStep.outputs.day_of_week,
-  created_at: healthCheckStep.outputs.created_at,
-});
+// Datastoreに回答内容を保存するステップ
+const saveRawDataStep = TestHealthCheckWorkflow.addStep(
+  SaveRawDataFunction,
+  {
+    user_id: healthCheckStep.outputs.user_id,
+    channel_id: healthCheckStep.outputs.channel_id,
+    message_ts: healthCheckStep.outputs.message_ts,
+    meal: healthCheckStep.outputs.meal,
+    sleep: healthCheckStep.outputs.sleep,
+    condition: healthCheckStep.outputs.condition,
+    work_style: healthCheckStep.outputs.work_style,
+    medication: healthCheckStep.outputs.medication,
+    depression: healthCheckStep.outputs.depression,
+    record_date: healthCheckStep.outputs.record_date,
+    week_start_date: healthCheckStep.outputs.week_start_date,
+    day_of_week: healthCheckStep.outputs.day_of_week,
+    created_at: healthCheckStep.outputs.created_at,
+  },
+);
 
 export default TestHealthCheckWorkflow;
