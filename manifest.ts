@@ -3,6 +3,8 @@ import TestHealthCheckWorkflow from "./workflows/test_workflow.ts";
 import { SendTestHealthCheckBlocksFunction } from "./functions/test_send_health_check_blocks.ts";
 import SlackUserProfilesDatastore from "./datastores/slack_user_profiles.ts";
 import DailyHealthLogsDatastore from "./datastores/daily_health_logs.ts";
+import { SaveRawDataFunction } from "./functions/save_raw_data.ts";
+import { UpdateHealthSummaryFunction } from "./functions/update_health_summary.ts";
 
 export default Manifest({
   name: "daily-health-logs",
@@ -13,6 +15,8 @@ export default Manifest({
   ],
   functions: [
     SendTestHealthCheckBlocksFunction,
+    SaveRawDataFunction,
+    UpdateHealthSummaryFunction,
   ],
   datastores: [
     SlackUserProfilesDatastore,

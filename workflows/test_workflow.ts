@@ -1,6 +1,7 @@
 import { DefineWorkflow, Schema } from "deno-slack-sdk/mod.ts";
 import { SendTestHealthCheckBlocksFunction } from "../functions/test_send_health_check_blocks.ts";
 import { SaveRawDataFunction } from "../functions/save_raw_data.ts";
+import { UpdateHealthSummaryFunction } from "../functions/update_health_summary.ts";
 
 /**
  * 体調チェックBlock KitをSlack AppからDMでテスト送信するWorkflow
@@ -49,6 +50,22 @@ const saveRawDataStep = TestHealthCheckWorkflow.addStep(
     week_start_date: healthCheckStep.outputs.week_start_date,
     day_of_week: healthCheckStep.outputs.day_of_week,
     created_at: healthCheckStep.outputs.created_at,
+  },
+);
+
+// Datastoreへの保存完了後に、体調サマリーをSlackメッセージへ反映するステップ
+TestHealthCheckWorkflow.addStep(
+  UpdateHealthSummaryFunction,
+  {
+    record_id: saveRawDataStep.outputs.record_id,
+    user_id: healthCheckStep.outputs.user_id,
+    channel_id: healthCheckStep.outputs.channel_id,
+    message_ts: healthCheckStep.outputs.message_ts,
+    medication: healthCheckStep.outputs.medication,
+    depression: healthCheckStep.outputs.depression,
+    record_date: healthCheckStep.outputs.record_date,
+    week_start_date: healthCheckStep.outputs.week_start_date,
+    day_of_week: healthCheckStep.outputs.day_of_week,
   },
 );
 
