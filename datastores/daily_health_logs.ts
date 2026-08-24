@@ -60,13 +60,13 @@ const DailyHealthLogsDatastore = DefineDatastore({
       description:
         "就業スタイル。例: work_office, work_remote, work_hybrid, work_off",
     },
-    medication: {
+    medication_status: {
       type: Schema.types.string,
-      description: "服薬の回答。例: meds_taken, meds_forgot",
+      description: "服薬状況。例: meds_taken, meds_not_taken",
     },
-    depression: {
+    low_mood_status: {
       type: Schema.types.string,
-      description: "気分の落ち込み。例: depression_no, depression_yes",
+      description: "気分の落ち込みの有無。例: depression_no, depression_yes",
     },
     channel_id: {
       type: Schema.slack.types.channel_id,
