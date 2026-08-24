@@ -208,7 +208,7 @@ export async function buildSubmissionCompletionBlocks(
         [
           { type: "raw_text", text: "Work-Style" },
           { type: "raw_text", text: "Day" },
-          { type: "raw_text", text: "Has-Meal" },
+          { type: "raw_text", text: "Meal Status" },
         ],
         [
           { type: "raw_text", text: "在宅勤務" },
