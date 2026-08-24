@@ -1,3 +1,5 @@
+import { HEALTH_CHECK_ACTION_IDS } from "../utils/health_check_answers.ts";
+
 /**
  * 
  * Slack Block Kitを使ったラジオボタンを含むメッセージ内容を生成する一連の処理
@@ -71,7 +73,7 @@ function buildDailyHealthCheckBlocks() {
     {
       title: "きちんと食事を取れていますか？",
       blockId: "block_meal",
-      actionId: "action_meal",
+      actionId: HEALTH_CHECK_ACTION_IDS.mealStatus,
       options: [
         { text: "はい", value: "meal_yes" },
         { text: "いいえ", value: "meal_no" },
@@ -80,7 +82,7 @@ function buildDailyHealthCheckBlocks() {
     {
       title: "きちんと眠れていますか？",
       blockId: "block_sleep",
-      actionId: "action_sleep",
+      actionId: HEALTH_CHECK_ACTION_IDS.sleepStatus,
       options: [
         { text: "はい", value: "sleep_good" },
         { text: "やや寝不足", value: "sleep_slight" },
@@ -91,7 +93,7 @@ function buildDailyHealthCheckBlocks() {
     {
       title: "体調はどうですか？",
       blockId: "block_condition",
-      actionId: "action_condition",
+      actionId: HEALTH_CHECK_ACTION_IDS.condition,
       options: [
         { text: "良好", value: "condition_excellent" },
         { text: "まぁまぁ", value: "condition_good" },
@@ -102,7 +104,7 @@ function buildDailyHealthCheckBlocks() {
     {
       title: "本日の就業スタイルは？",
       blockId: "block_work_style",
-      actionId: "action_work_style",
+      actionId: HEALTH_CHECK_ACTION_IDS.workStyle,
       options: [
         { text: "出社", value: "work_office" },
         { text: "在宅勤務", value: "work_remote" },
@@ -113,7 +115,7 @@ function buildDailyHealthCheckBlocks() {
     {
       title: "服薬は忘れていませんか？",
       blockId: "block_medication_status",
-      actionId: "action_medication_status",
+      actionId: HEALTH_CHECK_ACTION_IDS.medicationStatus,
       options: [
         { text: "問題ありません", value: "medication_taken" },
         { text: "忘れていたかも", value: "medication_not_taken" },
@@ -122,7 +124,7 @@ function buildDailyHealthCheckBlocks() {
     {
       title: "気分の落ち込みはありませんか？",
       blockId: "block_low_mood_status",
-      actionId: "action_low_mood_status",
+      actionId: HEALTH_CHECK_ACTION_IDS.lowMoodStatus,
       options: [
         { text: "問題ありません", value: "low_mood_absent" },
         { text: "落ち込みがあります", value: "low_mood_present" },
@@ -157,10 +159,4 @@ function buildDailyHealthCheckBlocks() {
  * 
  */
 const healthCheckBlocks = buildDailyHealthCheckBlocks();
-const healthCheckBlocksObject = {
-  blocks: healthCheckBlocks,
-};
-
-console.log(JSON.stringify(healthCheckBlocksObject, null, 2));
-
 export { healthCheckBlocks };
