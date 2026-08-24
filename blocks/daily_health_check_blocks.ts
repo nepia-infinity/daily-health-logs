@@ -1,11 +1,7 @@
 import { HEALTH_CHECK_ACTION_IDS } from "../utils/health_check_answers.ts";
 
 /**
- * 
  * Slack Block Kitを使ったラジオボタンを含むメッセージ内容を生成する一連の処理
- * 
- * 
- * 
  */
 function plainText(text: string) {
   return {
@@ -22,8 +18,6 @@ function headerBlock(text: string) {
     level: 2,
   };
 }
-
-
 
 function actionButtonsBlock() {
   return {
@@ -152,11 +146,10 @@ function buildDailyHealthCheckBlocks() {
 
 /**
  * for文で生成した質問内容を成形する
- * 
+ *
  * {
  *  blocks:[ここに各blockが入る]
  * }
- * 
  */
 const healthCheckBlocks = buildDailyHealthCheckBlocks();
 export { healthCheckBlocks };
