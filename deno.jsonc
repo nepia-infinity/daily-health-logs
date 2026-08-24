@@ -3,24 +3,28 @@
   "fmt": {
     "include": [
       "README.md",
-      "datastores",
+      "blocks",
+      "datastores"
       "external_auth",
       "functions",
       "manifest.ts",
       "triggers",
       "types",
+      "utils",
       "views",
       "workflows"
     ]
   },
   "lint": {
     "include": [
-      "datastores",
+      "blocks",
+      "datastores"
       "external_auth",
       "functions",
       "manifest.ts",
       "triggers",
       "types",
+      "utils",
       "views",
       "workflows"
     ]
