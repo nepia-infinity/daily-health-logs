@@ -119,7 +119,7 @@ $ slack datastore get --datastore daily_health_logs --key 'U0123ABCDEF#2026-06-2
 
 ```zsh
 # record_id を複数指定してdaily_health_logsデータストアから値を一括取得
-slack-cli datastore bulk-get '{"datastore":"daily_health_logs","ids":["U0BC46H2U3C#2026-06-27","U0BC46H2U3C#2026-06-28"]}' --output json
+slack-cli datastore bulk-get '{"datastore":"daily_health_logs","ids":["U0123ABCDEF#2026-06-27","U0123ABCDEF#2026-06-28"]}' --output json
 ```
 
 JSONのログ
@@ -134,11 +134,11 @@ JSONのログ
     "condition": "condition_excellent",
     "sleep_status": "sleep_good",
     "record_date": "2026-06-27",
-    "record_id": "U0BC46H2U3C#2026-06-27",
+    "record_id": "U0123ABCDEF#2026-06-27",
     "day_of_week": "Sat",
     "sleep_score": 1,
     "condition_score": 1,
-    "user_id": "U0BC46H2U3C",
+    "user_id": "U0123ABCDEF",
     "channel_id": "*****",
     "work_style": "work_remote",
     "medication_status": "medication_not_taken"
@@ -152,11 +152,11 @@ JSONのログ
     "condition": "condition_excellent",
     "sleep_status": "sleep_slight",
     "record_date": "2026-06-30",
-    "record_id": "U0BC46H2U3C#2026-06-30",
+    "record_id": "U0123ABCDEF#2026-06-30",
     "day_of_week": "Tue",
     "sleep_score": 0.75,
     "condition_score": 1,
-    "user_id": "U0BC46H2U3C",
+    "user_id": "U0123ABCDEF",
     "channel_id": "*****",
     "work_style": "work_remote",
     "medication_status": "medication_taken"
@@ -170,11 +170,11 @@ JSONのログ
     "condition": "condition_excellent",
     "sleep_status": "sleep_slight",
     "record_date": "2026-06-28",
-    "record_id": "U0BC46H2U3C#2026-06-28",
+    "record_id": "U0123ABCDEF#2026-06-28",
     "day_of_week": "Sun",
     "sleep_score": 0.75,
     "condition_score": 1,
-    "user_id": "U0BC46H2U3C",
+    "user_id": "U0123ABCDEF",
     "channel_id": "*****",
     "work_style": "work_office",
     "medication_status": "medication_taken"
@@ -188,11 +188,11 @@ JSONのログ
     "condition": "condition_excellent",
     "sleep_status": "sleep_good",
     "record_date": "2026-06-29",
-    "record_id": "U0BC46H2U3C#2026-06-29",
+    "record_id": "U0123ABCDEF#2026-06-29",
     "day_of_week": "Mon",
     "sleep_score": 1,
     "condition_score": 1,
-    "user_id": "U0BC46H2U3C",
+    "user_id": "U0123ABCDEF",
     "channel_id": "*****",
     "work_style": "work_office",
     "medication_status": "medication_taken"
@@ -248,11 +248,16 @@ $ slack activity --tail
 
 開発用およびデプロイ済みアプリのインストール詳細を含む`apps.dev.json`と`apps.json`が含まれています。
 
-### `Deno単体でのテスト`
-.envが読み込めず、エラーが出ている
+### Denoでのチェック
+
+fmt、lint、単体テストをまとめて実行します。
+
+```zsh
+$ deno task test
 ```
-deno run --config=deno.jsonc --env-file=.env --allow-env --allow-net --allow-read .\utils\test_fetch_bulk_daily_health_logs.ts
-```
+
+単体テストは、既存の `test_` 接頭辞とDenoが自動検出する `_test.ts`
+接尾辞を組み合わせて命名しています。
 
 
 ## リソース
