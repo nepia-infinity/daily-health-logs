@@ -6,11 +6,11 @@ export async function fetchBulkDailyHealthLogs(
   userId: string,
   weekStartDate: string,
 ) {
-
   // グラフ描画側で週の開始日と一致するものをフィルタリングする、ここでは最大で7件固定で取得する
   const dateUtils = new DateUtils();
-  const ids = Array.from({ length: 7 }, (_, days) =>
-    `${userId}#${dateUtils.addDays(weekStartDate, days)}`
+  const ids = Array.from(
+    { length: 7 },
+    (_, days) => `${userId}#${dateUtils.addDays(weekStartDate, days)}`,
   );
 
   // datastoreからbulkGet（一括）で取得する
@@ -22,7 +22,9 @@ export async function fetchBulkDailyHealthLogs(
   // APIのレスポンスがエラーの場合はエラーをスローする
   if (!response.ok) {
     throw new Error(
-      `Failed to bulkGet daily health logs: ${response.error ?? "unknown error"}`,
+      `Failed to bulkGet daily health logs: ${
+        response.error ?? "unknown error"
+      }`,
     );
   }
 
