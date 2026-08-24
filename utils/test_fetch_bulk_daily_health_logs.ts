@@ -26,9 +26,15 @@ export async function fetchBulkDailyHealthLogs(
     );
   }
 
-  console.log("=== Datastore Response ===");
-  console.log(JSON.stringify(response, null, 2));
+  const items = response.items ?? [];
+
+  console.log(JSON.stringify({
+    event: "daily_health_logs_bulk_get_completed",
+    week_start_date: weekStartDate,
+    requested_count: ids.length,
+    returned_count: items.length,
+  }));
 
   // Datastoreにその週のデータが0件の場合は空配列を返す
-  return response.items ?? [];
+  return items;
 }
