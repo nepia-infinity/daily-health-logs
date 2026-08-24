@@ -112,20 +112,20 @@ function buildDailyHealthCheckBlocks() {
     },
     {
       title: "服薬は忘れていませんか？",
-      blockId: "block_medication",
-      actionId: "action_medication",
+      blockId: "block_medication_status",
+      actionId: "action_medication_status",
       options: [
-        { text: "問題ありません", value: "meds_taken" },
-        { text: "忘れていたかも", value: "meds_not_taken" },
+        { text: "問題ありません", value: "medication_taken" },
+        { text: "忘れていたかも", value: "medication_not_taken" },
       ],
     },
     {
       title: "気分の落ち込みはありませんか？",
-      blockId: "block_depression",
-      actionId: "action_depression",
+      blockId: "block_low_mood_status",
+      actionId: "action_low_mood_status",
       options: [
-        { text: "問題ありません", value: "depression_no" },
-        { text: "落ち込みがあります", value: "depression_yes" },
+        { text: "問題ありません", value: "low_mood_absent" },
+        { text: "落ち込みがあります", value: "low_mood_present" },
       ],
     },
   ];

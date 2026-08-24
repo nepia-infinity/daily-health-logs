@@ -77,13 +77,13 @@ export const SendTestHealthCheckBlocksFunction = DefineFunction({
         type: Schema.types.string,
         description: "就業スタイルの回答",
       },
-      medication: {
+      medication_status: {
         type: Schema.types.string,
-        description: "服薬の回答",
+        description: "服薬状況の回答",
       },
-      depression: {
+      low_mood_status: {
         type: Schema.types.string,
-        description: "気分の落ち込みの回答",
+        description: "気分の落ち込みの有無",
       },
       record_date: {
         type: Schema.types.string,
@@ -110,8 +110,8 @@ export const SendTestHealthCheckBlocksFunction = DefineFunction({
       "sleep_status",
       "condition",
       "work_style",
-      "medication",
-      "depression",
+      "medication_status",
+      "low_mood_status",
       "record_date",
       "week_start_date",
       "day_of_week",
@@ -145,8 +145,8 @@ export default SlackFunction(
     "action_sleep",
     "action_condition",
     "action_work_style",
-    "action_medication",
-    "action_depression",
+    "action_medication_status",
+    "action_low_mood_status",
     "submit_survey",
     "cancel_survey",
   ],
@@ -200,8 +200,14 @@ export default SlackFunction(
       const sleepStatus = getSelectedValue(values, "action_sleep");
       const condition = getSelectedValue(values, "action_condition");
       const workStyle = getSelectedValue(values, "action_work_style");
-      const medication = getSelectedValue(values, "action_medication");
-      const depression = getSelectedValue(values, "action_depression");
+      const medicationStatus = getSelectedValue(
+        values,
+        "action_medication_status",
+      );
+      const lowMoodStatus = getSelectedValue(
+        values,
+        "action_low_mood_status",
+      );
 
       // 送信ボタンを押した直後に、保存中メッセージへ切り替える
       const progressUpdateResponse = await client.chat.update({
@@ -240,8 +246,8 @@ export default SlackFunction(
           sleep_status: sleepStatus,
           condition,
           work_style: workStyle,
-          medication,
-          depression,
+          medication_status: medicationStatus,
+          low_mood_status: lowMoodStatus,
           record_date: recordDate,
           week_start_date: weekStartDate,
           day_of_week: dayOfWeek,

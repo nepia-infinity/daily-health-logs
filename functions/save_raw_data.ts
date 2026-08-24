@@ -58,13 +58,13 @@ export const SaveRawDataFunction = DefineFunction({
         type: Schema.types.string,
         description: "就業スタイルの回答",
       },
-      medication: {
+      medication_status: {
         type: Schema.types.string,
-        description: "服薬の回答",
+        description: "服薬状況の回答",
       },
-      depression: {
+      low_mood_status: {
         type: Schema.types.string,
-        description: "気分の落ち込みの回答",
+        description: "気分の落ち込みの有無",
       },
       record_date: {
         type: Schema.types.string,
@@ -91,8 +91,8 @@ export const SaveRawDataFunction = DefineFunction({
       "sleep_status",
       "condition",
       "work_style",
-      "medication",
-      "depression",
+      "medication_status",
+      "low_mood_status",
       "record_date",
       "week_start_date",
       "day_of_week",
@@ -131,8 +131,8 @@ export default SlackFunction(
         condition: inputs.condition,
         condition_score: toScore("action_condition", inputs.condition),
         work_style: inputs.work_style,
-        medication_status: inputs.medication,
-        low_mood_status: inputs.depression,
+        medication_status: inputs.medication_status,
+        low_mood_status: inputs.low_mood_status,
         channel_id: inputs.channel_id,
         message_ts: inputs.message_ts,
       },
