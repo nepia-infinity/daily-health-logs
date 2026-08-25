@@ -66,7 +66,8 @@ const DailyHealthLogsDatastore = DefineDatastore({
     },
     low_mood_status: {
       type: Schema.types.string,
-      description: "気分の落ち込みの有無。例: low_mood_absent, low_mood_present",
+      description:
+        "気分の落ち込みの有無。例: low_mood_absent, low_mood_present",
     },
     channel_id: {
       type: Schema.slack.types.channel_id,

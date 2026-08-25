@@ -1,27 +1,7 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
+import { getConditionScore, getSleepScore } from "../utils/health_scores.ts";
 
 const DAILY_HEALTH_LOGS_DATASTORE = "daily_health_logs";
-
-/**
- * スコア化したいradio_buttonsの選択肢を、action_idごとに並び順で定義する。
- */
-const scoreOptions: Record<string, readonly string[]> = {
-  action_sleep: [
-    "sleep_good",
-    "sleep_slight",
-    "sleep_poor",
-    "sleep_none",
-  ],
-  action_condition: [
-    "condition_excellent",
-    "condition_good",
-    "condition_poor",
-    "condition_bad",
-  ],
-};
-
-/** scoreOptions内の選択肢の並び順に対応するスコア。 */
-const scoreValues = [1, 0.75, 0.5, 0.25] as const;
 
 export const SaveRawDataFunction = DefineFunction({
   callback_id: "save_raw_data",
@@ -113,6 +93,22 @@ export const SaveRawDataFunction = DefineFunction({
 export default SlackFunction(
   SaveRawDataFunction,
   async ({ inputs, client }) => {
+    const sleepScore = getSleepScore(inputs.sleep_status);
+
+    if (sleepScore === undefined) {
+      return {
+        error: "sleep_statusに未対応の回答コードが指定されました。",
+      };
+    }
+
+    const conditionScore = getConditionScore(inputs.condition);
+
+    if (conditionScore === undefined) {
+      return {
+        error: "conditionに未対応の回答コードが指定されました。",
+      };
+    }
+
     // datastore検索用のUUIDを生成する （例）U0BC46H2U3C#2026-06-28
     // （例）slack datastore get --datastore daily_health_logs '{"id": "U0BC46H2U3C#2026-06-28"}'
     const recordId = `${inputs.user_id}#${inputs.record_date}`;
@@ -127,9 +123,9 @@ export default SlackFunction(
         created_at: inputs.created_at,
         meal_status: inputs.meal_status,
         sleep_status: inputs.sleep_status,
-        sleep_score: toScore("action_sleep", inputs.sleep_status),
+        sleep_score: sleepScore,
         condition: inputs.condition,
-        condition_score: toScore("action_condition", inputs.condition),
+        condition_score: conditionScore,
         work_style: inputs.work_style,
         medication_status: inputs.medication_status,
         low_mood_status: inputs.low_mood_status,
@@ -144,6 +140,12 @@ export default SlackFunction(
       };
     }
 
+    console.log(JSON.stringify({
+      event: "daily_health_log_saved",
+      record_date: inputs.record_date,
+      week_start_date: inputs.week_start_date,
+    }));
+
     return {
       outputs: {
         record_id: recordId,
@@ -151,19 +153,3 @@ export default SlackFunction(
     };
   },
 );
-
-function toScore(actionId: string, value: string): number {
-  const options = scoreOptions[actionId];
-
-  if (!options) {
-    return 0;
-  }
-
-  const index = options.indexOf(value);
-
-  if (index === -1) {
-    return 0;
-  }
-
-  return scoreValues[index] ?? 0;
-}

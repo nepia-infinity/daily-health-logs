@@ -1,8 +1,13 @@
+import type { SlackAPIClient } from "deno-slack-sdk/types.ts";
+
 /**
  * Slack APIを使用してユーザーのタイムゾーン(tz)を取得する
  * 取得に失敗した場合はデフォルトで "Asia/Tokyo" を返す
  */
-export async function fetchUserTimeZone(client: any, userId: string): Promise<string> {
+export async function fetchUserTimeZone(
+  client: SlackAPIClient,
+  userId: string,
+): Promise<string> {
   try {
     const response = await client.users.info({
       user: userId,
@@ -12,7 +17,10 @@ export async function fetchUserTimeZone(client: any, userId: string): Promise<st
     if (response.ok && response.user?.tz) {
       return response.user.tz;
     } else {
-      console.warn(`tzの取得に失敗しました。デフォルトの Asia/Tokyo を使用します。`, response.error);
+      console.warn(
+        `tzの取得に失敗しました。デフォルトの Asia/Tokyo を使用します。`,
+        response.error,
+      );
     }
   } catch (error) {
     console.error("users.info API呼び出し中にエラーが発生しました:", error);

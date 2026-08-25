@@ -66,9 +66,11 @@ export const UpdateHealthSummaryFunction = DefineFunction({
 export default SlackFunction(
   UpdateHealthSummaryFunction,
   async ({ inputs, client }) => {
-    console.log(
-      `体調サマリー更新ステップを開始します: ${inputs.record_id}`,
-    );
+    console.log(JSON.stringify({
+      event: "health_summary_update_started",
+      record_date: inputs.record_date,
+      week_start_date: inputs.week_start_date,
+    }));
 
     const submissionCompletionBlocks = await buildSubmissionCompletionBlocks(
       {
