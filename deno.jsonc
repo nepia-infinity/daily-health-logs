@@ -4,7 +4,7 @@
     "include": [
       "README.md",
       "blocks",
-      "datastores"
+      "datastores",
       "external_auth",
       "functions",
       "manifest.ts",
@@ -18,7 +18,7 @@
   "lint": {
     "include": [
       "blocks",
-      "datastores"
+      "datastores",
       "external_auth",
       "functions",
       "manifest.ts",
