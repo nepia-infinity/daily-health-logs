@@ -116,7 +116,22 @@ $ slack trigger create --trigger-def triggers/test_trigger.ts
 
 - `daily_health_logs`: 日々の健康状態の回答を保存します。
 - `slack_user_profiles`:
-  ユーザーのSlackプロファイル情報（現在は未使用）を保存するためのものです。
+  アンケート参加者のSlackプロファイルと配信設定を保存します。`survey_enabled`が`true`のユーザーだけを定期配信対象とします。
+
+### アンケート参加者の配信設定
+
+`slack_user_profiles`では、既存のプロフィール属性に加えて次の配信設定を管理します。
+
+| 属性 | 用途 |
+| --- | --- |
+| `slack_member_id` | アンケート送信先となるSlackユーザーID |
+| `survey_enabled` | 定期配信の有効・無効 |
+| `delivery_time` | ユーザーごとの配信時刻（HH:mm） |
+| `time_zone` | 配信時刻の基準となるIANAタイムゾーン |
+| `scheduled_trigger_id` | ユーザーごとに作成するScheduled TriggerのID |
+| `created_at` / `updated_at` | 参加者設定の作成日時・更新日時 |
+
+既存レコードで`survey_enabled`が未設定の場合は、意図しない配信を防ぐため配信対象に含めません。実際のScheduled Trigger作成と配信処理は、次の実装でこのDatastoreを参照して行います。
 
 ### CLIからのデータ参照
 
@@ -243,7 +258,7 @@ $ slack activity --tail
 - `daily_health_logs.ts`:
   日々の健康チェックの回答を格納するデータストアの定義です。
 - `slack_user_profiles.ts`:
-  Slackユーザーのプロファイル情報を格納するデータストアの定義です。
+  Slackユーザーのプロフィールと体調アンケートの配信設定を格納するデータストアの定義です。
 
 ### `functions/`
 
