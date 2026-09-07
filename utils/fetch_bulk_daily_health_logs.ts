@@ -8,7 +8,7 @@ export async function fetchBulkDailyHealthLogs(
 ) {
   // グラフ描画側で週の開始日と一致するものをフィルタリングする、ここでは最大で7件固定で取得する
   const dateUtils = new DateUtils();
-  const ids = Array.from(
+  const itemIds = Array.from(
     { length: 7 },
     (_, days) => `${userId}#${dateUtils.addDays(weekStartDate, days)}`,
   );
@@ -16,7 +16,7 @@ export async function fetchBulkDailyHealthLogs(
   // datastoreからbulkGet（一括）で取得する
   const response = await client.apps.datastore.bulkGet({
     datastore: "daily_health_logs",
-    ids: ids,
+    ids: itemIds,
   });
 
   // APIのレスポンスがエラーの場合はエラーをスローする
@@ -33,7 +33,7 @@ export async function fetchBulkDailyHealthLogs(
   console.log(JSON.stringify({
     event: "daily_health_logs_bulk_get_completed",
     week_start_date: weekStartDate,
-    requested_count: ids.length,
+    requested_count: itemIds.length,
     returned_count: items.length,
   }));
 

@@ -1,5 +1,5 @@
 import type { SlackAPIClient } from "deno-slack-sdk/types.ts";
-import { fetchBulkDailyHealthLogs } from "../utils/test_fetch_bulk_daily_health_logs.ts";
+import { fetchBulkDailyHealthLogs } from "../utils/fetch_bulk_daily_health_logs.ts";
 
 const workStyleLabels: Record<string, string> = {
   work_office: "出社",
