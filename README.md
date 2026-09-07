@@ -23,7 +23,8 @@ CLIを使用して構築されています。
 
 ## 概要
 
-このアプリは、Slackのショートカットからワークフローを起動し、ユーザーにDMで体調に関する質問を送信します。ユーザーがBlock
+このアプリは、Slackのショートカットからワークフローを起動し、ユーザーにDMで体調に関する質問を送信します。定期配信を有効にしたユーザーには、ワークスペース共通のScheduled
+Triggerから回答ボタン付きのDMを送信します。ユーザーがBlock
 Kitで構成されたフォームに回答すると、その内容はSlackがホストするデータストアに安全に保存されます。
 
 個人の健康に関する情報を取り扱うため、やり取りはすべてユーザー個人のDM内で行われ、他のユーザーに情報が見えることはありません。
@@ -34,6 +35,10 @@ Kitで構成されたフォームに回答すると、その内容はSlackがホ
 
 - **体調チェックの開始**:
   Slackのショートカットメニューから簡単に体調チェックを開始できます。
+- **本人による定期配信設定**:
+  開始・停止用のショートカットから、ユーザー自身が定期配信の対象を変更できます。
+- **一括定期配信**: 1つのScheduled
+  Triggerが登録済みユーザーを取得し、少数ずつに分けてDMを送信します。
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/a167e8ec-10c9-45d7-9bb0-d2bddcd89401" />
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/6ffb2188-5842-4eca-bada-6f57adc65031" />
@@ -95,7 +100,8 @@ Connected, awaiting events
 
 ## トリガーの作成
 
-[トリガー](https://api.slack.com/automation/triggers)は、ワークフローを実行するきっかけとなるものです。このアプリでは、ショートカットからワークフローを起動するリンクトリガーを使用します。
+[トリガー](https://api.slack.com/automation/triggers)は、ワークフローを実行するきっかけとなるものです。このアプリでは、ショートカットからワークフローを起動するリンクトリガーと、ワークスペース共通のScheduled
+Triggerを使用します。参加者ごとのScheduled Triggerは作成しません。
 
 プロジェクトを初めて`run`または`deploy`するとき、`triggers/`ディレクトリにトリガー定義が見つかると、CLIがトリガーの作成を促します。
 
@@ -110,6 +116,34 @@ $ slack trigger create --trigger-def triggers/test_trigger.ts
 **注意:
 アプリがローカルで実行されているか、デプロイされていない限り、トリガーはワークフローを実行しません！**
 
+### 定期配信トリガーのセットアップ
+
+定期配信DMのボタンは、`test_trigger.ts`から作成した体調チェック用リンクトリガーを開始します。リンクトリガーは環境とワークスペースごとに異なるため、作成時に発行されたURLを環境変数へ設定してください。
+
+```zsh
+# 1. 体調チェック用リンクトリガーを作成し、表示されたURLを控える
+$ slack trigger create --trigger-def triggers/test_trigger.ts
+
+# 2. 回答ボタンで使用するURLを設定する
+$ slack env set HEALTH_CHECK_TRIGGER_URL 'https://slack.com/shortcuts/...'
+
+# 3. 参加・停止用リンクトリガーを作成する
+$ slack trigger create --trigger-def triggers/subscribe_survey_trigger.ts
+$ slack trigger create --trigger-def triggers/unsubscribe_survey_trigger.ts
+
+# 4. ワークスペース共通のScheduled Triggerを1つだけ作成する
+$ slack trigger create --trigger-def triggers/scheduled_health_check_delivery_trigger.ts
+```
+
+デプロイ済みアプリでは、`HEALTH_CHECK_TRIGGER_URL`を設定した後にもう一度`slack deploy`を実行し、環境変数を反映してからScheduled
+Triggerを作成してください。ローカル実行では`slack run`を再起動します。
+
+配信時刻は`config/delivery.ts`でワークスペース共通に設定します。初期値は`Asia/Tokyo`の9:00です。設定を変更した場合はScheduled
+Triggerを作り直してください。
+
+一括配信は初期設定で5件ずつ送信し、バッチ間に1秒待機します。HTTP
+429が返された場合は`Retry-After`を尊重して最大3回まで再試行し、1人への送信失敗で残りの配信を止めません。同じ日付に送信済みの参加者は再実行時にスキップします。
+
 ## データストア
 
 このアプリでは、以下の2つのデータストアを使用して情報を保存します。データストアを利用するには、マニフェストファイルに`datastore:write`および`datastore:read`スコープが必要です。
@@ -122,16 +156,18 @@ $ slack trigger create --trigger-def triggers/test_trigger.ts
 
 `slack_user_profiles`では、既存のプロフィール属性に加えて次の配信設定を管理します。
 
-| 属性 | 用途 |
-| --- | --- |
-| `slack_member_id` | アンケート送信先となるSlackユーザーID |
-| `survey_enabled` | 定期配信の有効・無効 |
-| `delivery_time` | ユーザーごとの配信時刻（HH:mm） |
-| `time_zone` | 配信時刻の基準となるIANAタイムゾーン |
-| `scheduled_trigger_id` | ユーザーごとに作成するScheduled TriggerのID |
-| `created_at` / `updated_at` | 参加者設定の作成日時・更新日時 |
+| 属性                        | 用途                                  |
+| --------------------------- | ------------------------------------- |
+| `slack_member_id`           | アンケート送信先となるSlackユーザーID |
+| `survey_enabled`            | 定期配信の有効・無効                  |
+| `dm_channel_id`             | Slack AppとのDMチャンネルID           |
+| `last_delivery_date`        | 最後に定期配信した日（YYYY-MM-DD）    |
+| `created_at` / `updated_at` | 参加者設定の作成日時・更新日時        |
 
-既存レコードで`survey_enabled`が未設定の場合は、意図しない配信を防ぐため配信対象に含めません。実際のScheduled Trigger作成と配信処理は、次の実装でこのDatastoreを参照して行います。
+既存レコードで`survey_enabled`が未設定の場合は、意図しない配信を防ぐため配信対象に含めません。開始用ショートカットを実行するとユーザー情報とDMチャンネルIDを保存し、`survey_enabled`を`true`にします。停止用ショートカットではレコードを削除せず、`survey_enabled`を`false`に変更します。
+
+参加者別Scheduled
+Triggerを前提としていた`delivery_time`、`time_zone`、`scheduled_trigger_id`は使用しません。これらの属性を既にデプロイしている環境では、Datastoreスキーマから削除するため、最初のデプロイ時に`--force`が必要になる場合があります。
 
 ### CLIからのデータ参照
 
@@ -231,11 +267,14 @@ JSONのログ
 
 ## デプロイ
 
-開発が完了したら、`slack deploy`コマンドを使用してアプリをSlackインフラストラクチャにデプロイします。
+開発が完了したら、`slack deploy`コマンドを使用してアプリをSlackインフラストラクチャにデプロイします。今回の変更ではDatastore属性を削除するため、既にPR
+#10のスキーマをデプロイ済みの環境では初回のみ`--force`を付けます。
 
 ```zsh
-$ slack deploy
+$ slack deploy --force
 ```
+
+以後は通常どおり`slack deploy`を使用できます。
 
 ## アクティビティログの表示
 
@@ -266,6 +305,10 @@ $ slack activity --tail
 
 - `test_send_health_check_blocks.ts`:
   ユーザーに体調チェックの質問をDMで送信する関数です。
+- `manage_survey_subscription.ts`:
+  ユーザー自身の定期配信設定とDMチャンネルIDを保存する関数です。
+- `send_scheduled_health_check_reminders.ts`:
+  配信対象を取得し、回答ボタン付きDMをバッチ送信する関数です。
 - `save_raw_data.ts`:
   ユーザーからの回答を`daily_health_logs`データストアに保存する関数です。
 
@@ -275,6 +318,11 @@ $ slack activity --tail
 
 - `test_trigger.ts`:
   ユーザーがショートカットをクリックしたときに`TestHealthCheckWorkflow`を開始するためのトリガー定義です。
+- `subscribe_survey_trigger.ts` / `unsubscribe_survey_trigger.ts`:
+  ユーザー自身が定期配信を開始・停止するためのリンクトリガー定義です。
+- `scheduled_health_check_delivery_trigger.ts`:
+  登録済みユーザーへの一括配信を毎日開始する、ワークスペース共通のScheduled
+  Trigger定義です。
 
 ### `workflows/`
 
@@ -282,6 +330,10 @@ $ slack activity --tail
 
 - `test_workflow.ts`:
   体調チェックの質問を送信し、回答を保存するという一連の流れを定義したワークフローです。
+- `manage_survey_subscription_workflow.ts`:
+  定期配信の開始・停止設定を保存するワークフローです。
+- `scheduled_health_check_delivery_workflow.ts`:
+  登録済みユーザーへの一括配信を実行するワークフローです。
 
 ### `.slack/`
 

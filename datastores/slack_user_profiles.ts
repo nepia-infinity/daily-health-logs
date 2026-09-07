@@ -34,17 +34,13 @@ const SlackUserProfilesDatastore = DefineDatastore({
       type: Schema.types.boolean,
       description: "体調アンケートの定期配信を有効にするか",
     },
-    delivery_time: {
-      type: Schema.types.string,
-      description: "アンケートの配信時刻（HH:mm）",
+    dm_channel_id: {
+      type: Schema.slack.types.channel_id,
+      description: "定期配信に使用するSlack AppとのDMチャンネルID",
     },
-    time_zone: {
+    last_delivery_date: {
       type: Schema.types.string,
-      description: "配信時刻の基準となるIANAタイムゾーン（例: Asia/Tokyo）",
-    },
-    scheduled_trigger_id: {
-      type: Schema.types.string,
-      description: "参加者用Scheduled TriggerのID",
+      description: "最後に定期配信した日（YYYY-MM-DD）",
     },
     created_at: {
       type: Schema.slack.types.timestamp,
