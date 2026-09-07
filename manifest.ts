@@ -1,6 +1,6 @@
 import { Manifest } from "deno-slack-sdk/mod.ts";
-import TestHealthCheckWorkflow from "./workflows/test_workflow.ts";
-import { SendTestHealthCheckBlocksFunction } from "./functions/test_send_health_check_blocks.ts";
+import DailyHealthCheckWorkflow from "./workflows/daily_health_check_workflow.ts";
+import { SendHealthCheckFormFunction } from "./functions/send_health_check_form.ts";
 import SlackUserProfilesDatastore from "./datastores/slack_user_profiles.ts";
 import DailyHealthLogsDatastore from "./datastores/daily_health_logs.ts";
 import { SaveRawDataFunction } from "./functions/save_raw_data.ts";
@@ -15,12 +15,12 @@ export default Manifest({
   description: "Daily health check logs with Slack Block Kit",
   icon: "assets/app_logo.png",
   workflows: [
-    TestHealthCheckWorkflow,
+    DailyHealthCheckWorkflow,
     ManageSurveySubscriptionWorkflow,
     ScheduledHealthCheckDeliveryWorkflow,
   ],
   functions: [
-    SendTestHealthCheckBlocksFunction,
+    SendHealthCheckFormFunction,
     SaveRawDataFunction,
     UpdateHealthSummaryFunction,
     ManageSurveySubscriptionFunction,
