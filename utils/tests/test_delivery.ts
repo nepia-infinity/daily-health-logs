@@ -1,5 +1,5 @@
 import { deepStrictEqual, strictEqual, throws } from "node:assert/strict";
-import { chunkItems, getNextDailyDeliveryStartTime } from "./delivery.ts";
+import { chunkItems, getNextDailyDeliveryStartTime } from "../delivery.ts";
 
 Deno.test("東京時間で次の配信時刻を計算できる", () => {
   strictEqual(

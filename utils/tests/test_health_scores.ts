@@ -1,5 +1,5 @@
 import { strictEqual } from "node:assert/strict";
-import { getConditionScore, getSleepScore } from "./health_scores.ts";
+import { getConditionScore, getSleepScore } from "../health_scores.ts";
 
 Deno.test("睡眠状況をグラフ用スコアへ変換できる", () => {
   strictEqual(getSleepScore("sleep_good"), 1);

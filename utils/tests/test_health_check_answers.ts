@@ -3,7 +3,7 @@ import {
   type BlockStateValues,
   getHealthCheckAnswers,
   getMissingHealthCheckAnswerLabels,
-} from "./health_check_answers.ts";
+} from "../health_check_answers.ts";
 
 Deno.test("全項目の選択値をBlock Kitのstateから取得できる", () => {
   const values: BlockStateValues = {

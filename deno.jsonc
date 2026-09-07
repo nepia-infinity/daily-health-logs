@@ -31,6 +31,9 @@
       "workflows"
     ]
   },
+  "test": {
+    "include": ["*/tests/test_*.ts"]
+  },
   "lock": false,
   "tasks": {
     "test": "deno fmt --check && deno lint && deno test --allow-read"

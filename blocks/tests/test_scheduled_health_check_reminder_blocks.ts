@@ -1,5 +1,5 @@
 import { deepStrictEqual } from "node:assert/strict";
-import { scheduledHealthCheckReminderBlocks } from "./scheduled_health_check_reminder_blocks.ts";
+import { scheduledHealthCheckReminderBlocks } from "../scheduled_health_check_reminder_blocks.ts";
 
 Deno.test("定期配信DMに体調チェックWorkflowのボタンを含める", () => {
   const triggerUrl = "https://slack.com/shortcuts/example/trigger";
