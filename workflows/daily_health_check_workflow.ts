@@ -1,19 +1,18 @@
 import { DefineWorkflow, Schema } from "deno-slack-sdk/mod.ts";
-import { SendTestHealthCheckBlocksFunction } from "../functions/test_send_health_check_blocks.ts";
+import { SendHealthCheckFormFunction } from "../functions/send_health_check_form.ts";
 import { SaveRawDataFunction } from "../functions/save_raw_data.ts";
 import { UpdateHealthSummaryFunction } from "../functions/update_health_summary.ts";
 
 /**
- * 体調チェックBlock KitをSlack AppからDMでテスト送信するWorkflow
+ * 日次体調チェックをDMで送信し、回答を保存するWorkflow
  *
  * 体調に関する個人情報を扱うため、
  * パブリックチャンネルではなく、対象ユーザーへのDMに送信します。
  */
-const TestHealthCheckWorkflow = DefineWorkflow({
+const DailyHealthCheckWorkflow = DefineWorkflow({
   callback_id: "test_health_check_workflow",
-  title: "体調チェックBlock Kitテスト",
-  description:
-    "Slack Block Kit Builder形式のJSONをSlack AppからDMでテスト送信します",
+  title: "日次体調チェック",
+  description: "体調チェックフォームをDMで送信し、回答を保存します",
   input_parameters: {
     properties: {
       user_id: {
@@ -26,15 +25,15 @@ const TestHealthCheckWorkflow = DefineWorkflow({
 });
 
 // 入力フォームを投稿するステップ
-const healthCheckStep = TestHealthCheckWorkflow.addStep(
-  SendTestHealthCheckBlocksFunction,
+const healthCheckStep = DailyHealthCheckWorkflow.addStep(
+  SendHealthCheckFormFunction,
   {
-    user_id: TestHealthCheckWorkflow.inputs.user_id,
+    user_id: DailyHealthCheckWorkflow.inputs.user_id,
   },
 );
 
 // Datastoreに回答内容を保存するステップ
-const saveRawDataStep = TestHealthCheckWorkflow.addStep(
+const saveRawDataStep = DailyHealthCheckWorkflow.addStep(
   SaveRawDataFunction,
   {
     user_id: healthCheckStep.outputs.user_id,
@@ -54,7 +53,7 @@ const saveRawDataStep = TestHealthCheckWorkflow.addStep(
 );
 
 // Datastoreへの保存完了後に、体調サマリーをSlackメッセージへ反映するステップ
-TestHealthCheckWorkflow.addStep(
+DailyHealthCheckWorkflow.addStep(
   UpdateHealthSummaryFunction,
   {
     record_id: saveRawDataStep.outputs.record_id,
@@ -69,4 +68,4 @@ TestHealthCheckWorkflow.addStep(
   },
 );
 
-export default TestHealthCheckWorkflow;
+export default DailyHealthCheckWorkflow;

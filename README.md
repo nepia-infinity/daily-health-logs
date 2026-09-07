@@ -108,7 +108,7 @@ Triggerを使用します。参加者ごとのScheduled Triggerは作成しま�
 トリガーを手動で作成するには、次のコマンドを使用します。
 
 ```zsh
-$ slack trigger create --trigger-def triggers/test_trigger.ts
+$ slack trigger create --trigger-def triggers/daily_health_check_link_trigger.ts
 ```
 
 コマンドを実行すると、トリガーを作成するワークスペースと環境を選択するよう求められます。ローカル環境で作成されたトリガーは、アプリをローカルで実行している場合にのみ使用できます。作成後、ショートカットURLが発行されるので、それをクリックすることでワークフローが実行されます。
@@ -118,11 +118,11 @@ $ slack trigger create --trigger-def triggers/test_trigger.ts
 
 ### 定期配信トリガーのセットアップ
 
-定期配信DMのボタンは、`test_trigger.ts`から作成した体調チェック用リンクトリガーを開始します。リンクトリガーは環境とワークスペースごとに異なるため、作成時に発行されたURLを環境変数へ設定してください。
+定期配信DMのボタンは、`daily_health_check_link_trigger.ts`から作成した体調チェック用リンクトリガーを開始します。リンクトリガーは環境とワークスペースごとに異なるため、作成時に発行されたURLを環境変数へ設定してください。
 
 ```zsh
 # 1. 体調チェック用リンクトリガーを作成し、表示されたURLを控える
-$ slack trigger create --trigger-def triggers/test_trigger.ts
+$ slack trigger create --trigger-def triggers/daily_health_check_link_trigger.ts
 
 # 2. 回答ボタンで使用するURLを設定する
 $ slack env set HEALTH_CHECK_TRIGGER_URL 'https://slack.com/shortcuts/...'
@@ -303,7 +303,7 @@ $ slack activity --tail
 
 [関数](https://api.slack.com/automation/functions)は、ワークフローのステップとして実行される個別の処理単位です。
 
-- `test_send_health_check_blocks.ts`:
+- `send_health_check_form.ts`:
   ユーザーに体調チェックの質問をDMで送信する関数です。
 - `manage_survey_subscription.ts`:
   ユーザー自身の定期配信設定とDMチャンネルIDを保存する関数です。
@@ -316,8 +316,8 @@ $ slack activity --tail
 
 [トリガー](https://api.slack.com/automation/triggers)は、ワークフローをいつ実行するかを定義します。
 
-- `test_trigger.ts`:
-  ユーザーがショートカットをクリックしたときに`TestHealthCheckWorkflow`を開始するためのトリガー定義です。
+- `daily_health_check_link_trigger.ts`:
+  ユーザーがショートカットをクリックしたときに`DailyHealthCheckWorkflow`を開始するためのトリガー定義です。
 - `subscribe_survey_trigger.ts` / `unsubscribe_survey_trigger.ts`:
   ユーザー自身が定期配信を開始・停止するためのリンクトリガー定義です。
 - `scheduled_health_check_delivery_trigger.ts`:
@@ -328,7 +328,7 @@ $ slack activity --tail
 
 [ワークフロー](https://api.slack.com/automation/workflows)は、一連のステップ（関数）を順序通りに実行する処理の流れです。
 
-- `test_workflow.ts`:
+- `daily_health_check_workflow.ts`:
   体調チェックの質問を送信し、回答を保存するという一連の流れを定義したワークフローです。
 - `manage_survey_subscription_workflow.ts`:
   定期配信の開始・停止設定を保存するワークフローです。

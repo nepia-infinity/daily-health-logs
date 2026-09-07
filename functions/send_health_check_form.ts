@@ -10,16 +10,16 @@ import {
 } from "../utils/health_check_answers.ts";
 
 /**
- * 体調チェックBlock KitをSlack AppからDMでテスト送信するFunction
+ * 体調チェックフォームをSlack AppからDMで送信するFunction
  *
  * blocks/daily_health_check_blocks.ts で生成したBlock Kitを読み込み、
  * 指定したSlackユーザーにDMで送信します。
  */
-export const SendTestHealthCheckBlocksFunction = DefineFunction({
+export const SendHealthCheckFormFunction = DefineFunction({
   callback_id: "test_send_health_check_blocks",
-  title: "体調チェックBlock Kitをテスト送信",
-  description: "生成済みのBlock KitをSlack AppからDMでテスト送信します",
-  source_file: "functions/test_send_health_check_blocks.ts",
+  title: "体調チェックフォームを送信",
+  description: "体調チェックフォームをSlack AppからDMで送信します",
+  source_file: "functions/send_health_check_form.ts",
   input_parameters: {
     properties: {
       user_id: {
@@ -103,7 +103,7 @@ export const SendTestHealthCheckBlocksFunction = DefineFunction({
 });
 
 export default SlackFunction(
-  SendTestHealthCheckBlocksFunction,
+  SendHealthCheckFormFunction,
   async ({ inputs, client }) => {
     const response = await client.chat.postMessage({
       channel: inputs.user_id,
@@ -237,7 +237,8 @@ export default SlackFunction(
       const createdAt = now.toISOString();
 
       // 次のステップへ渡す値をここで定義
-      // 引数を変更する際は、functions/save_raw_data.ts と workflows/test_workflow.ts の修正が必要
+      // 引数を変更する際は、functions/save_raw_data.ts と
+      // workflows/daily_health_check_workflow.ts の修正が必要
       await client.functions.completeSuccess({
         function_execution_id: body.function_data.execution_id,
         outputs: {
