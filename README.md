@@ -7,15 +7,17 @@ CLIを使用して構築されています。
 
 - [概要](#概要)
 - [主な機能](#主な機能)
+- [現在の運用仕様](#現在の運用仕様)
 - [今後の展望](#今後の展望)
 - [セットアップ](#セットアップ)
   - [Slack CLIのインストール](#slack-cliのインストール)
   - [リポジトリのクローン](#リポジトリのクローン)
 - [ローカルでの実行](#ローカルでの実行)
-- [トリガーの作成](#トリガーの作成)
+- [トリガーと本番環境のセットアップ](#トリガーと本番環境のセットアップ)
 - [データストア](#データストア)
 - [デプロイ](#デプロイ)
 - [アクティビティログの表示](#アクティビティログの表示)
+- [トラブルシューティング](#トラブルシューティング)
 - [プロジェクトの構造](#プロジェクトの構造)
 - [リソース](#リソース)
 
@@ -43,10 +45,31 @@ Kitで構成されたフォームに回答すると、その内容はSlackがホ
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/a167e8ec-10c9-45d7-9bb0-d2bddcd89401" />
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/6ffb2188-5842-4eca-bada-6f57adc65031" />
 
-- **最近ではTable（表形式）やData
-  Visualization（データ可視化）といった新しいコンポーネントも利用可能になり、より表現力豊かなUIを構築できます。
+- **回答チェック**:
+  6項目の未回答を検出し、選択済みの回答を保持したままフォーム内に警告を表示します。すべて回答して送信すると警告は消え、保存中・完了表示へ切り替わります。
+- **週次サマリー**: Table（表形式）やData
+  Visualization（データ可視化）を使用して、保存した健康状態の推移を表示します。
 - **データ保存**:
   回答内容はSlackのDatastoreに保存され、後から参照することが可能です。
+
+## 現在の運用仕様
+
+これまでの変更により、現在は次の構成で動作します。
+
+| 項目         | 現在の仕様                                                    |
+| ------------ | ------------------------------------------------------------- |
+| 定期実行     | ワークスペース共通のScheduled Triggerを1つだけ作成            |
+| 配信対象     | `slack_user_profiles`で`survey_enabled`が`true`のユーザー     |
+| 参加・停止   | 本人が開始・停止用リンクトリガーから切り替え                  |
+| 回答導線     | 定期配信DMのボタンから体調チェック用リンクトリガーを起動      |
+| 配信時刻     | `config/delivery.ts`で一括管理（初期値: `Asia/Tokyo` 8:00）   |
+| 二重配信防止 | 同じ日に送信済みのユーザーは`last_delivery_date`でスキップ    |
+| 配信制御     | 5件ずつ送信し、バッチ間に1秒待機。HTTP 429時は最大3回再試行   |
+| 入力検証     | 6項目すべての回答を必須とし、未回答時はフォーム内に警告を表示 |
+
+参加者ごとにScheduled
+Triggerを作成する方式は使用しません。参加者が増えても、共通のScheduled
+Triggerが対象ユーザーをDatastoreから取得して一括配信します。
 
 ## 今後の展望
 
@@ -86,7 +109,7 @@ $ cd daily-health-logs
 
 ```zsh
 # アプリをローカルで実行します
-$ slack run
+slack run
 
 Connected, awaiting events
 ```
@@ -96,53 +119,129 @@ Connected, awaiting events
 > **Note for Windows Users:**
 > Windows環境では、環境変数のPATHの優先順位によっては、`slack run`のようなコマンドを実行しようとすると、Slackのデスクトップアプリ(`slack.exe`)が起動してしまう場合があります。
 > その場合は、ターミナルで`slack.exe`へのパスよりもSlack
-> CLIへのパスの優先順位が高くなるように設定を調整するか、コマンドをフルパスで指定するなどの対応をご検討ください。
+> CLIへのパスの優先順位が高くなるように設定するか、このREADME内の`slack`を`slack-cli`に読み替えて実行してください。
 
-## トリガーの作成
+## トリガーと本番環境のセットアップ
 
-[トリガー](https://api.slack.com/automation/triggers)は、ワークフローを実行するきっかけとなるものです。このアプリでは、ショートカットからワークフローを起動するリンクトリガーと、ワークスペース共通のScheduled
-Triggerを使用します。参加者ごとのScheduled Triggerは作成しません。
+[トリガー](https://docs.slack.dev/tools/deno-slack-sdk/guides/using-triggers/)は、ワークフローを実行するきっかけです。このアプリでは4種類のトリガーを使用します。
 
-プロジェクトを初めて`run`または`deploy`するとき、`triggers/`ディレクトリにトリガー定義が見つかると、CLIがトリガーの作成を促します。
+### トリガーの役割
 
-トリガーを手動で作成するには、次のコマンドを使用します。
+| 定義ファイル                                 | 種類              | 役割                                   | 必要数        |
+| -------------------------------------------- | ----------------- | -------------------------------------- | ------------- |
+| `daily_health_check_link_trigger.ts`         | Link Trigger      | 体調チェックフォームを開始する         | 環境ごとに1つ |
+| `subscribe_survey_trigger.ts`                | Link Trigger      | 実行したユーザーを定期配信対象にする   | 環境ごとに1つ |
+| `unsubscribe_survey_trigger.ts`              | Link Trigger      | 実行したユーザーを定期配信対象から外す | 環境ごとに1つ |
+| `scheduled_health_check_delivery_trigger.ts` | Scheduled Trigger | 対象ユーザーへ毎日まとめてDMを送る     | 環境ごとに1つ |
+
+ローカル環境と本番環境のトリガーは別物です。ローカルで作成したトリガーは`slack run`の実行中にしか動きません。本番運用では、各コマンドで必ず`(local)`ではないデプロイ済みアプリを選択してください。
+
+### `HEALTH_CHECK_TRIGGER_URL`が必要な理由
+
+Scheduled
+Triggerが送るDMには「体調チェックを開始する」ボタンがあります。このボタンの遷移先には、`daily_health_check_link_trigger.ts`から作成したShortcut
+URLを指定します。
+
+Shortcut
+URLは次の条件で異なるため、ソースコードへ固定せず、環境変数`HEALTH_CHECK_TRIGGER_URL`で管理します。
+
+- Slackワークスペース
+- ローカル／本番の実行環境
+- 作成したリンクトリガー
+
+環境変数が未設定、または値が`https://slack.com/shortcuts/`で始まらない場合、Scheduled
+Triggerは起動してもDM配信ステップがエラーになります。
+
+### 本番環境の初回セットアップ
+
+#### 1. アプリをデプロイする
+
+初回は、リンクトリガーが参照するWorkflowを先に本番環境へデプロイします。
 
 ```zsh
-$ slack trigger create --trigger-def triggers/daily_health_check_link_trigger.ts
+slack deploy
 ```
 
-コマンドを実行すると、トリガーを作成するワークスペースと環境を選択するよう求められます。ローカル環境で作成されたトリガーは、アプリをローカルで実行している場合にのみ使用できます。作成後、ショートカットURLが発行されるので、それをクリックすることでワークフローが実行されます。
+過去に`delivery_time`、`time_zone`、`scheduled_trigger_id`を含むDatastoreスキーマをデプロイしている環境では、属性削除を反映する最初の1回だけ`slack deploy --force`が必要になる場合があります。
 
-**注意:
-アプリがローカルで実行されているか、デプロイされていない限り、トリガーはワークフローを実行しません！**
-
-### 定期配信トリガーのセットアップ
-
-定期配信DMのボタンは、`daily_health_check_link_trigger.ts`から作成した体調チェック用リンクトリガーを開始します。リンクトリガーは環境とワークスペースごとに異なるため、作成時に発行されたURLを環境変数へ設定してください。
+#### 2. 体調チェック用リンクトリガーを作成する
 
 ```zsh
-# 1. 体調チェック用リンクトリガーを作成し、表示されたURLを控える
-$ slack trigger create --trigger-def triggers/daily_health_check_link_trigger.ts
-
-# 2. 回答ボタンで使用するURLを設定する
-$ slack env set HEALTH_CHECK_TRIGGER_URL 'https://slack.com/shortcuts/...'
-
-# 3. 参加・停止用リンクトリガーを作成する
-$ slack trigger create --trigger-def triggers/subscribe_survey_trigger.ts
-$ slack trigger create --trigger-def triggers/unsubscribe_survey_trigger.ts
-
-# 4. ワークスペース共通のScheduled Triggerを1つだけ作成する
-$ slack trigger create --trigger-def triggers/scheduled_health_check_delivery_trigger.ts
+slack trigger create --trigger-def triggers/daily_health_check_link_trigger.ts
 ```
 
-デプロイ済みアプリでは、`HEALTH_CHECK_TRIGGER_URL`を設定した後にもう一度`slack deploy`を実行し、環境変数を反映してからScheduled
-Triggerを作成してください。ローカル実行では`slack run`を再起動します。
+本番のデプロイ済みアプリを選択し、作成後に表示される次の形式のShortcut
+URLを控えます。
 
-配信時刻は`config/delivery.ts`でワークスペース共通に設定します。初期値は`Asia/Tokyo`の9:00です。設定を変更した場合はScheduled
-Triggerを作り直してください。
+```text
+https://slack.com/shortcuts/...
+```
 
-一括配信は初期設定で5件ずつ送信し、バッチ間に1秒待機します。HTTP
-429が返された場合は`Retry-After`を尊重して最大3回まで再試行し、1人への送信失敗で残りの配信を止めません。同じ日付に送信済みの参加者は再実行時にスキップします。
+#### 3. Shortcut URLを本番環境へ登録する
+
+```zsh
+slack env set HEALTH_CHECK_TRIGGER_URL 'https://slack.com/shortcuts/...'
+```
+
+登録先には、手順2でリンクトリガーを作成したものと同じ本番アプリを選択します。登録状態は次のコマンドで確認できます。
+
+```zsh
+slack env list
+```
+
+一覧に`HEALTH_CHECK_TRIGGER_URL`が表示されることを確認したら、環境変数を反映するため、もう一度デプロイします。
+
+実際のShortcut
+URLはREADMEやソースコードへ直接記載せず、本番では`slack env set`、ローカルではGit管理対象外の`.env`に保存してください。
+
+```zsh
+slack deploy
+```
+
+#### 4. 参加・停止用リンクトリガーを作成する
+
+```zsh
+slack trigger create --trigger-def triggers/subscribe_survey_trigger.ts
+slack trigger create --trigger-def triggers/unsubscribe_survey_trigger.ts
+```
+
+作成された開始用URLをユーザーが実行すると、`slack_user_profiles`の`survey_enabled`が`true`になります。停止用URLでは`false`になります。
+
+#### 5. 共通Scheduled Triggerを1つ作成する
+
+```zsh
+slack trigger create --trigger-def triggers/scheduled_health_check_delivery_trigger.ts
+```
+
+同じ本番環境に複数作成すると、同じWorkflowが重複して起動するため、Scheduled
+Triggerは1つだけ作成します。作成済みトリガーは次のコマンドで確認できます。
+
+```zsh
+slack trigger list
+```
+
+### 配信時刻を変更する
+
+配信時刻は`config/delivery.ts`で設定します。初期値は`Asia/Tokyo`の8:00です。
+
+Scheduled
+Triggerの実行予定は作成時に確定するため、コードを変更してデプロイするだけでは既存トリガーの時刻は変わりません。既存のScheduled
+Triggerを削除し、作り直してください。
+
+```zsh
+slack trigger list
+slack trigger delete --trigger-id FtXXXXXXXXXX
+slack trigger create --trigger-def triggers/scheduled_health_check_delivery_trigger.ts
+```
+
+### ローカル環境で確認する場合
+
+ローカル用のShortcut
+URLは本番用URLと共用できません。ローカル環境で体調チェック用リンクトリガーを作成し、そのURLをローカルの`.env`へ設定してから`slack run`を再起動します。
+
+```dotenv
+HEALTH_CHECK_TRIGGER_URL=https://slack.com/shortcuts/...
+```
 
 ## データストア
 
@@ -169,21 +268,40 @@ Triggerを作り直してください。
 参加者別Scheduled
 Triggerを前提としていた`delivery_time`、`time_zone`、`scheduled_trigger_id`は使用しません。これらの属性を既にデプロイしている環境では、Datastoreスキーマから削除するため、最初のデプロイ時に`--force`が必要になる場合があります。
 
+### 参加者の登録
+
+通常は`subscribe_survey_trigger.ts`から作成した開始用URLをユーザー本人が実行して登録します。この方法では、表示名とSlack
+AppとのDMチャンネルIDも自動的に保存されます。
+
+動作確認などで手動登録する場合は、SlackユーザーIDを指定して次のコマンドを実行できます。
+
+```zsh
+slack datastore put --datastore slack_user_profiles '{"item":{"slack_member_id":"U0123ABCDEF","screen_name":"Example User","survey_enabled":true}}'
+```
+
+登録結果は主キーとなるSlackユーザーIDで確認します。
+
+```zsh
+slack datastore get --datastore slack_user_profiles '{"id":"U0123ABCDEF"}'
+```
+
+`datastore put`は、同じ主キーのレコードが存在するとレコード全体を置き換えます。既存レコードへ使用する場合は、先に`datastore get`で現在の内容を確認してください。
+
+`slack_user_profiles`が0件、または`survey_enabled: true`のユーザーが0人の場合、定期配信はエラーになりません。DMを送らず、成功・失敗・スキップがすべて0件として正常終了します。ただし、`HEALTH_CHECK_TRIGGER_URL`の検証は参加者検索より先に行うため、参加者が0人でも環境変数が未設定ならエラーになります。
+
 ### CLIからのデータ参照
 
 Slack CLIを使用すると、データストアに保存された値を直接確認できます。
-主キー（このアプリでは
-`record_id`）を指定して、以下のようにコマンドを実行します。`record_id` は
-`ユーザーID#日付` の形式です。
+`daily_health_logs`の主キーである`record_id`を指定して、以下のようにコマンドを実行します。`record_id`は`ユーザーID#日付`の形式です。
 
 ```zsh
 # record_id を指定してdaily_health_logsデータストアから値を取得
-$ slack datastore get --datastore daily_health_logs --key 'U0123ABCDEF#2026-06-29'
+slack datastore get --datastore daily_health_logs '{"id":"U0123ABCDEF#2026-06-29"}'
 ```
 
 ```zsh
 # record_id を複数指定してdaily_health_logsデータストアから値を一括取得
-slack-cli datastore bulk-get '{"datastore":"daily_health_logs","ids":["U0123ABCDEF#2026-06-27","U0123ABCDEF#2026-06-28"]}' --output json
+slack datastore bulk-get '{"datastore":"daily_health_logs","ids":["U0123ABCDEF#2026-06-27","U0123ABCDEF#2026-06-28"]}' --output json
 ```
 
 JSONのログ
@@ -267,21 +385,75 @@ JSONのログ
 
 ## デプロイ
 
-開発が完了したら、`slack deploy`コマンドを使用してアプリをSlackインフラストラクチャにデプロイします。今回の変更ではDatastore属性を削除するため、既にPR
-#10のスキーマをデプロイ済みの環境では初回のみ`--force`を付けます。
+開発が完了したら、`slack deploy`コマンドを使用してアプリをSlackインフラストラクチャにデプロイします。
 
 ```zsh
-$ slack deploy --force
+slack deploy
 ```
 
-以後は通常どおり`slack deploy`を使用できます。
+参加者別Scheduled
+Trigger用の`delivery_time`、`time_zone`、`scheduled_trigger_id`を含む古いDatastoreスキーマをデプロイ済みの場合は、属性削除を反映する最初の1回だけ`--force`を付けます。
+
+```zsh
+slack deploy --force
+```
+
+デプロイだけでは、トリガーの作成や`HEALTH_CHECK_TRIGGER_URL`の登録は行われません。初回の本番セットアップでは、[トリガーと本番環境のセットアップ](#トリガーと本番環境のセットアップ)も実施してください。
 
 ## アクティビティログの表示
 
 アプリケーションのアクティビティログは、次のコマンドでリアルタイムに表示できます。
 
 ```zsh
-$ slack activity --tail
+slack activity --tail
+```
+
+## トラブルシューティング
+
+### `HEALTH_CHECK_TRIGGER_URL`のエラーが表示される
+
+Scheduled Triggerが動いている環境にShortcut URLが登録されていません。
+
+```zsh
+slack env list
+```
+
+本番運用ではデプロイ済みアプリを選び、`HEALTH_CHECK_TRIGGER_URL`が存在することを確認します。存在しない場合は、本番環境で作成した`daily_health_check_link_trigger.ts`のURLを設定して再デプロイしてください。
+
+### 定期実行は成功するがDMが届かない
+
+次の順に確認します。
+
+1. `slack_user_profiles`に対象ユーザーが存在する
+2. 対象ユーザーの`survey_enabled`が`true`になっている
+3. `last_delivery_date`が今日の日付になっていない
+4. `slack activity --tail`に送信エラーが記録されていない
+
+参加者が0人の場合は、DMを送らず正常終了します。
+
+### ローカルでは動くが本番では動かない
+
+ローカルと本番ではトリガーとShortcut
+URLが異なります。本番環境で4種類のトリガーを作成し、本番用`HEALTH_CHECK_TRIGGER_URL`を登録してください。
+
+### 配信時刻を変更しても以前の時刻に実行される
+
+Scheduled
+Triggerの予定は作成時の値を保持します。`config/delivery.ts`を変更してデプロイした後、既存のScheduled
+Triggerを削除して作り直してください。
+
+### DMが重複して届く
+
+同じ本番環境にScheduled Triggerが複数作成されていないか確認します。
+
+```zsh
+slack trigger list
+```
+
+不要なトリガーは、表示されたTrigger IDを指定して削除します。
+
+```zsh
+slack trigger delete --trigger-id FtXXXXXXXXXX
 ```
 
 ## プロジェクトの構造
@@ -314,7 +486,7 @@ $ slack activity --tail
 
 ### `triggers/`
 
-[トリガー](https://api.slack.com/automation/triggers)は、ワークフローをいつ実行するかを定義します。
+[トリガー](https://docs.slack.dev/tools/deno-slack-sdk/guides/using-triggers/)は、ワークフローをいつ実行するかを定義します。
 
 - `daily_health_check_link_trigger.ts`:
   ユーザーがショートカットをクリックしたときに`DailyHealthCheckWorkflow`を開始するためのトリガー定義です。
