@@ -205,7 +205,7 @@ export default SlackFunction(
     if (!triggerUrl?.startsWith("https://slack.com/shortcuts/")) {
       return {
         error:
-          "HEALTH_CHECK_TRIGGER_URLに体調チェック用リンクトリガーURLを設定してください。",
+          "HEALTH_CHECK_TRIGGER_URLに体調チェック用リンクトリガーURLを設定してください。（本番環境では、環境変数の登録が必要です。）",
       };
     }
 
