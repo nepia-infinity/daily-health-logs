@@ -180,6 +180,7 @@ export default SlackFunction(
       const answers = getHealthCheckAnswers(values);
       const missingAnswerLabels = getMissingHealthCheckAnswerLabels(answers);
 
+      // 未回答の項目がある場合は、警告メッセージを表示して送信処理を中断する
       if (missingAnswerLabels.length > 0) {
         const validationMessage = `:warning: 未回答の項目があります：${
           missingAnswerLabels.join("、")
