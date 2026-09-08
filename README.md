@@ -38,7 +38,7 @@ Kitで構成されたフォームに回答すると、その内容はSlackがホ
 - **体調チェックの開始**:
   Slackのショートカットメニューから簡単に体調チェックを開始できます。
 - **本人による定期配信設定**:
-  開始・停止用のショートカットから、ユーザー自身が定期配信の対象を変更できます。
+  1つのショートカットから、ユーザー自身が定期配信の開始・停止を切り替えられます。
 - **一括定期配信**: 1つのScheduled
   Triggerが登録済みユーザーを取得し、少数ずつに分けてDMを送信します。
 
@@ -60,7 +60,7 @@ Kitで構成されたフォームに回答すると、その内容はSlackがホ
 | ------------ | ------------------------------------------------------------- |
 | 定期実行     | ワークスペース共通のScheduled Triggerを1つだけ作成            |
 | 配信対象     | `slack_user_profiles`で`survey_enabled`が`true`のユーザー     |
-| 参加・停止   | 本人が開始・停止用リンクトリガーから切り替え                  |
+| 参加・停止   | 本人が1つの配信設定用リンクトリガーから切り替え               |
 | 回答導線     | 定期配信DMのボタンから体調チェック用リンクトリガーを起動      |
 | 配信時刻     | `config/delivery.ts`で一括管理（初期値: `Asia/Tokyo` 8:00）   |
 | 二重配信防止 | 同じ日に送信済みのユーザーは`last_delivery_date`でスキップ    |
@@ -123,16 +123,15 @@ Connected, awaiting events
 
 ## トリガーと本番環境のセットアップ
 
-[トリガー](https://docs.slack.dev/tools/deno-slack-sdk/guides/using-triggers/)は、ワークフローを実行するきっかけです。このアプリでは4種類のトリガーを使用します。
+[トリガー](https://docs.slack.dev/tools/deno-slack-sdk/guides/using-triggers/)は、ワークフローを実行するきっかけです。このアプリでは3種類のトリガーを使用します。
 
 ### トリガーの役割
 
-| 定義ファイル                                 | 種類              | 役割                                   | 必要数        |
-| -------------------------------------------- | ----------------- | -------------------------------------- | ------------- |
-| `daily_health_check_link_trigger.ts`         | Link Trigger      | 体調チェックフォームを開始する         | 環境ごとに1つ |
-| `subscribe_survey_trigger.ts`                | Link Trigger      | 実行したユーザーを定期配信対象にする   | 環境ごとに1つ |
-| `unsubscribe_survey_trigger.ts`              | Link Trigger      | 実行したユーザーを定期配信対象から外す | 環境ごとに1つ |
-| `scheduled_health_check_delivery_trigger.ts` | Scheduled Trigger | 対象ユーザーへ毎日まとめてDMを送る     | 環境ごとに1つ |
+| 定義ファイル                                 | 種類              | 役割                                       | 必要数        |
+| -------------------------------------------- | ----------------- | ------------------------------------------ | ------------- |
+| `daily_health_check_link_trigger.ts`         | Link Trigger      | 体調チェックフォームを開始する             | 環境ごとに1つ |
+| `toggle_survey_subscription_trigger.ts`      | Link Trigger      | 実行したユーザーの定期配信設定を切り替える | 環境ごとに1つ |
+| `scheduled_health_check_delivery_trigger.ts` | Scheduled Trigger | 対象ユーザーへ毎日まとめてDMを送る         | 環境ごとに1つ |
 
 ローカル環境と本番環境のトリガーは別物です。ローカルで作成したトリガーは`slack run`の実行中にしか動きません。本番運用では、各コマンドで必ず`(local)`ではないデプロイ済みアプリを選択してください。
 
@@ -198,14 +197,21 @@ URLはREADMEやソースコードへ直接記載せず、本番では`slack env 
 slack deploy
 ```
 
-#### 4. 参加・停止用リンクトリガーを作成する
+#### 4. 定期配信設定用リンクトリガーを作成する
 
 ```zsh
-slack trigger create --trigger-def triggers/subscribe_survey_trigger.ts
-slack trigger create --trigger-def triggers/unsubscribe_survey_trigger.ts
+slack trigger create --trigger-def triggers/toggle_survey_subscription_trigger.ts
 ```
 
-作成された開始用URLをユーザーが実行すると、`slack_user_profiles`の`survey_enabled`が`true`になります。停止用URLでは`false`になります。
+作成されたURLを実行するたびに、`slack_user_profiles`の現在の`survey_enabled`を反転します。未登録・未設定・`false`の場合は`true`となって定期配信を開始し、`true`の場合は`false`となって停止します。実行結果は本人のDMへ通知されます。
+
+以前の開始用・停止用トリガーを作成済みの場合、定義ファイルを削除してもSlack上のトリガーは自動削除されません。`slack trigger list`で確認し、古い2つのTrigger
+IDを指定して削除してから、新しいトリガーを作成してください。
+
+```zsh
+slack trigger list
+slack trigger delete --trigger-id FtXXXXXXXXXX
+```
 
 #### 5. 最初の配信対象ユーザーを登録する
 
@@ -214,7 +220,7 @@ slack trigger create --trigger-def triggers/unsubscribe_survey_trigger.ts
 > `slack_user_profiles`に`survey_enabled: true`のレコードが1件以上必要です。
 > 対象者が0人でもWorkflow自体はエラーにならず、0件配信として正常終了するため、初回セットアップ時は特に注意してください。
 
-通常は、手順4で作成した開始用URLをユーザー本人が実行して登録します。動作確認のため、Datastoreへ直接登録する場合は、SlackユーザーIDと表示名を実際の値へ置き換えて次のコマンドを実行します。
+通常は、手順4で作成した配信設定用URLをユーザー本人が初めて実行して登録します。すでに配信中のユーザーが再度実行すると停止するため、DMに届く実行結果を確認してください。動作確認のため、Datastoreへ直接登録する場合は、SlackユーザーIDと表示名を実際の値へ置き換えて次のコマンドを実行します。
 
 ```zsh
 slack datastore put --datastore slack_user_profiles '{"item":{"slack_member_id":"U0123ABCDEF","screen_name":"Example User","survey_enabled":true}}'
@@ -290,15 +296,15 @@ HEALTH_CHECK_TRIGGER_URL=https://slack.com/shortcuts/...
 | `last_delivery_date`        | 最後に定期配信した日（YYYY-MM-DD）    |
 | `created_at` / `updated_at` | 参加者設定の作成日時・更新日時        |
 
-既存レコードで`survey_enabled`が未設定の場合は、意図しない配信を防ぐため配信対象に含めません。開始用ショートカットを実行するとユーザー情報とDMチャンネルIDを保存し、`survey_enabled`を`true`にします。停止用ショートカットではレコードを削除せず、`survey_enabled`を`false`に変更します。
+既存レコードで`survey_enabled`が未設定の場合は、意図しない配信を防ぐため配信対象に含めません。配信設定用ショートカットを実行するたびに現在値を反転し、未登録・未設定・`false`の場合は`true`に、`true`の場合は`false`に変更します。停止時もレコードは削除しません。
 
 参加者別Scheduled
 Triggerを前提としていた`delivery_time`、`time_zone`、`scheduled_trigger_id`は使用しません。これらの属性を既にデプロイしている環境では、Datastoreスキーマから削除するため、最初のデプロイ時に`--force`が必要になる場合があります。
 
 ### 参加者の登録
 
-通常は`subscribe_survey_trigger.ts`から作成した開始用URLをユーザー本人が実行して登録します。この方法では、表示名とSlack
-AppとのDMチャンネルIDも自動的に保存されます。
+通常は`toggle_survey_subscription_trigger.ts`から作成した配信設定用URLをユーザー本人が初めて実行して登録します。この方法では、表示名とSlack
+AppとのDMチャンネルIDも自動的に保存されます。登録済みで`survey_enabled`が`true`のユーザーが再度実行すると、定期配信は停止します。
 
 本番環境の初回登録は、[本番環境の初回セットアップの手順5](#5-最初の配信対象ユーザーを登録する)も参照してください。
 
@@ -463,7 +469,7 @@ slack env list
 ### ローカルでは動くが本番では動かない
 
 ローカルと本番ではトリガーとShortcut
-URLが異なります。本番環境で4種類のトリガーを作成し、本番用`HEALTH_CHECK_TRIGGER_URL`を登録してください。
+URLが異なります。本番環境で3種類のトリガーを作成し、本番用`HEALTH_CHECK_TRIGGER_URL`を登録してください。
 
 ### 配信時刻を変更しても以前の時刻に実行される
 
@@ -507,7 +513,7 @@ slack trigger delete --trigger-id FtXXXXXXXXXX
 - `send_health_check_form.ts`:
   ユーザーに体調チェックの質問をDMで送信する関数です。
 - `manage_survey_subscription.ts`:
-  ユーザー自身の定期配信設定とDMチャンネルIDを保存する関数です。
+  ユーザー自身の定期配信設定を反転し、DMチャンネルIDとともに保存する関数です。
 - `send_scheduled_health_check_reminders.ts`:
   配信対象を取得し、回答ボタン付きDMをバッチ送信する関数です。
 - `save_raw_data.ts`:
@@ -519,8 +525,8 @@ slack trigger delete --trigger-id FtXXXXXXXXXX
 
 - `daily_health_check_link_trigger.ts`:
   ユーザーがショートカットをクリックしたときに`DailyHealthCheckWorkflow`を開始するためのトリガー定義です。
-- `subscribe_survey_trigger.ts` / `unsubscribe_survey_trigger.ts`:
-  ユーザー自身が定期配信を開始・停止するためのリンクトリガー定義です。
+- `toggle_survey_subscription_trigger.ts`:
+  ユーザー自身が定期配信の開始・停止を切り替えるためのリンクトリガー定義です。
 - `scheduled_health_check_delivery_trigger.ts`:
   登録済みユーザーへの一括配信を毎日開始する、ワークスペース共通のScheduled
   Trigger定義です。
@@ -532,7 +538,7 @@ slack trigger delete --trigger-id FtXXXXXXXXXX
 - `daily_health_check_workflow.ts`:
   体調チェックの質問を送信し、回答を保存するという一連の流れを定義したワークフローです。
 - `manage_survey_subscription_workflow.ts`:
-  定期配信の開始・停止設定を保存するワークフローです。
+  現在の定期配信設定を反転して保存するワークフローです。
 - `scheduled_health_check_delivery_workflow.ts`:
   登録済みユーザーへの一括配信を実行するワークフローです。
 
