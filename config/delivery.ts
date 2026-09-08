@@ -4,7 +4,7 @@
  * 配信時刻を変更した場合はScheduled Triggerを作り直してください。
  */
 export const DELIVERY_TIME_ZONE = "Asia/Tokyo";
-export const DELIVERY_HOUR = 9;
+export const DELIVERY_HOUR = 8;
 export const DELIVERY_MINUTE = 0;
 
 /** 1バッチで同時に送信するDM数 */
