@@ -4,25 +4,20 @@ import { ManageSurveySubscriptionFunction } from "../functions/manage_survey_sub
 const ManageSurveySubscriptionWorkflow = DefineWorkflow({
   callback_id: "manage_survey_subscription_workflow",
   title: "体調アンケートの定期配信設定",
-  description: "実行したユーザー自身の定期配信を開始または停止します",
+  description: "実行したユーザー自身の現在の定期配信設定を切り替えます",
   input_parameters: {
     properties: {
       user_id: {
         type: Schema.slack.types.user_id,
         description: "設定を変更するSlackユーザー",
       },
-      survey_enabled: {
-        type: Schema.types.boolean,
-        description: "定期配信を有効にするか",
-      },
     },
-    required: ["user_id", "survey_enabled"],
+    required: ["user_id"],
   },
 });
 
 ManageSurveySubscriptionWorkflow.addStep(ManageSurveySubscriptionFunction, {
   user_id: ManageSurveySubscriptionWorkflow.inputs.user_id,
-  survey_enabled: ManageSurveySubscriptionWorkflow.inputs.survey_enabled,
 });
 
 export default ManageSurveySubscriptionWorkflow;
