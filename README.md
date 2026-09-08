@@ -207,7 +207,34 @@ slack trigger create --trigger-def triggers/unsubscribe_survey_trigger.ts
 
 作成された開始用URLをユーザーが実行すると、`slack_user_profiles`の`survey_enabled`が`true`になります。停止用URLでは`false`になります。
 
-#### 5. 共通Scheduled Triggerを1つ作成する
+#### 5. 最初の配信対象ユーザーを登録する
+
+> [!IMPORTANT]
+> Scheduled Triggerを作成しただけでは、配信対象ユーザーは登録されません。
+> `slack_user_profiles`に`survey_enabled: true`のレコードが1件以上必要です。
+> 対象者が0人でもWorkflow自体はエラーにならず、0件配信として正常終了するため、初回セットアップ時は特に注意してください。
+
+通常は、手順4で作成した開始用URLをユーザー本人が実行して登録します。動作確認のため、Datastoreへ直接登録する場合は、SlackユーザーIDと表示名を実際の値へ置き換えて次のコマンドを実行します。
+
+```zsh
+slack datastore put --datastore slack_user_profiles '{"item":{"slack_member_id":"U0123ABCDEF","screen_name":"Example User","survey_enabled":true}}'
+```
+
+Windowsで`slack`を実行するとSlackデスクトップアプリが開く環境では、先頭を`slack-cli`に置き換えます。
+
+```powershell
+slack-cli datastore put --datastore slack_user_profiles '{"item":{"slack_member_id":"U0123ABCDEF","screen_name":"Example User","survey_enabled":true}}'
+```
+
+コマンドの実行時は、定期配信を動かす本番アプリを選択してください。登録後、同じSlackユーザーIDを指定して内容を確認します。
+
+```zsh
+slack datastore get --datastore slack_user_profiles '{"id":"U0123ABCDEF"}'
+```
+
+出力に`survey_enabled: true`が含まれていれば、定期配信の対象として登録されています。手動登録では`dm_channel_id`を省略できます。初回送信時はSlackユーザーIDを宛先としてDMを開き、送信成功後にDMチャンネルIDが保存されます。
+
+#### 6. 共通Scheduled Triggerを1つ作成する
 
 ```zsh
 slack trigger create --trigger-def triggers/scheduled_health_check_delivery_trigger.ts
@@ -272,6 +299,8 @@ Triggerを前提としていた`delivery_time`、`time_zone`、`scheduled_trigge
 
 通常は`subscribe_survey_trigger.ts`から作成した開始用URLをユーザー本人が実行して登録します。この方法では、表示名とSlack
 AppとのDMチャンネルIDも自動的に保存されます。
+
+本番環境の初回登録は、[本番環境の初回セットアップの手順5](#5-最初の配信対象ユーザーを登録する)も参照してください。
 
 動作確認などで手動登録する場合は、SlackユーザーIDを指定して次のコマンドを実行できます。
 
@@ -429,7 +458,7 @@ slack env list
 3. `last_delivery_date`が今日の日付になっていない
 4. `slack activity --tail`に送信エラーが記録されていない
 
-参加者が0人の場合は、DMを送らず正常終了します。
+参加者が0人の場合は、DMを送らず正常終了します。初回セットアップ直後であれば、[最初の配信対象ユーザーを登録](#5-最初の配信対象ユーザーを登録する)してから再度確認してください。
 
 ### ローカルでは動くが本番では動かない
 
