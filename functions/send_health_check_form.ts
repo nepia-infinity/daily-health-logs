@@ -1,5 +1,5 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
-import { healthCheckBlocks } from "../blocks/daily_health_check_blocks.ts";
+import { buildDailyHealthCheckBlocks } from "../blocks/daily_health_check_blocks.ts";
 import { submissionProgressBlocks } from "../blocks/submission_progress_blocks.ts";
 import { DateUtils } from "../utils/date_utils.ts";
 import { fetchUserTimeZone } from "../utils/fetch_slack_user_info.ts";
@@ -108,7 +108,7 @@ export default SlackFunction(
     const response = await client.chat.postMessage({
       channel: inputs.user_id,
       text: "今日の体調チェックです。",
-      blocks: healthCheckBlocks,
+      blocks: buildDailyHealthCheckBlocks(),
     });
 
     if (!response.ok) {
@@ -184,14 +184,19 @@ export default SlackFunction(
         const validationMessage = `:warning: 未回答の項目があります：${
           missingAnswerLabels.join("、")
         }`;
-        const validationResponse = await client.chat.postMessage({
+        const validationResponse = await client.chat.update({
           channel: channelId,
+          ts: messageTs,
           text: validationMessage,
+          blocks: buildDailyHealthCheckBlocks({
+            answers,
+            validationMessage,
+          }),
         });
 
         if (!validationResponse.ok) {
           console.error(JSON.stringify({
-            event: "health_check_validation_message_failed",
+            event: "health_check_validation_update_failed",
             error: validationResponse.error ?? "unknown_error",
           }));
         }
